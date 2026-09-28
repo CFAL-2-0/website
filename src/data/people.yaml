@@ -1,0 +1,127 @@
+# People — the Team page is generated from this file.
+# ---------------------------------------------------
+# Only Dr. Michael Kinzel (Principal Investigator) is real. Every other entry
+# is an obvious development placeholder: delete them and add real members.
+#
+# Required
+#   name               Full name as displayed
+#   slug               Unique, URL-safe id (used for /team/#<slug> and references
+#                      from projects / news). Never reuse a slug.
+#   role               pi | postdoc | phd | ms | bs | alumni
+# Optional
+#   honorific          e.g. "Dr." (shown before the name)
+#   degreeStatus       line under the name; defaults to the role label
+#   title              secondary title, e.g. academic rank
+#   portrait           relative to src/assets/images/ (e.g. team/jane-doe.webp,
+#                      optimised) or a /public path (e.g. /images/team/jane-doe.webp).
+#                      Any aspect ratio works; cards crop to 4:5.
+#   portraitAlt        defaults to "Portrait of <name>"
+#   researchInterests  list of short phrases
+#   googleScholar      full Google Scholar profile URL
+#   profileUrl         institutional profile page URL
+#   website, email, bio, links[{label, url}]
+#   graduationYear, currentPosition   (alumni)
+#   order              sort order within the role (lower first)
+#   placeholder        true shows a "Demo content" badge
+#
+# Sections with no people are hidden automatically (e.g. Alumni).
+
+- name: Michael Kinzel
+  slug: michael-kinzel
+  honorific: Dr.
+  role: pi
+  degreeStatus: Principal Investigator
+  # Academic title, portrait, research interests, Scholar/profile links and
+  # biography are intentionally blank until supplied.
+  title: ''
+  portrait: ''
+  researchInterests: []
+  googleScholar: ''
+  profileUrl: ''
+  bio: ''
+  order: 0
+
+- name: Postdoctoral Researcher Placeholder
+  slug: postdoc-placeholder
+  role: postdoc
+  researchInterests:
+    - Research interest placeholder
+    - Second interest placeholder
+  order: 10
+  placeholder: true
+
+- name: PhD Researcher Placeholder A
+  slug: phd-placeholder-a
+  role: phd
+  researchInterests:
+    - Computational aerodynamics
+    - Rotorcraft
+  order: 10
+  placeholder: true
+
+- name: PhD Researcher Placeholder B
+  slug: phd-placeholder-b
+  role: phd
+  researchInterests:
+    - Propulsion
+    - Plume flows
+  order: 20
+  placeholder: true
+
+- name: PhD Researcher Placeholder C
+  slug: phd-placeholder-c
+  role: phd
+  researchInterests:
+    - Multiphysics
+    - High-performance computing
+  order: 30
+  placeholder: true
+
+- name: MS Researcher Placeholder A
+  slug: ms-placeholder-a
+  role: ms
+  researchInterests:
+    - Aeroacoustics
+  order: 10
+  placeholder: true
+
+- name: MS Researcher Placeholder B
+  slug: ms-placeholder-b
+  role: ms
+  researchInterests:
+    - Computational fluid dynamics
+  order: 20
+  placeholder: true
+
+- name: Undergraduate Researcher Placeholder A
+  slug: bs-placeholder-a
+  role: bs
+  researchInterests:
+    - Research interest placeholder
+  order: 10
+  placeholder: true
+
+- name: Undergraduate Researcher Placeholder B
+  slug: bs-placeholder-b
+  role: bs
+  researchInterests:
+    - Research interest placeholder
+  order: 20
+  placeholder: true
+
+- name: Undergraduate Researcher Placeholder C
+  slug: bs-placeholder-c
+  role: bs
+  researchInterests:
+    - Research interest placeholder
+  order: 30
+  placeholder: true
+
+# Alumni example (uncomment to show the Alumni section):
+# - name: Former Member Placeholder
+#   slug: alumni-placeholder
+#   role: alumni
+#   degreeStatus: PhD, 2025
+#   graduationYear: 2025
+#   currentPosition: Position placeholder
+#   placeholder: true

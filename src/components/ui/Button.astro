@@ -1,0 +1,64 @@
+---
+/**
+ * Link-or-button with the shared `.btn` styles. Renders <a> when `href` is
+ * given, otherwise <button>. External links get safe rel/target attributes.
+ */
+import type { HTMLAttributes } from 'astro/types';
+import Icon, { type IconName } from './Icon.astro';
+import { isExternal, url } from '../../lib/url';
+
+type Variant = 'primary' | 'secondary' | 'ghost' | 'light' | 'outline-light';
+
+interface Props extends Omit<HTMLAttributes<'button'>, 'type'> {
+  href?: string;
+  variant?: Variant;
+  size?: 'default' | 'small';
+  icon?: IconName;
+  iconPosition?: 'start' | 'end';
+  type?: 'button' | 'submit' | 'reset';
+}
+
+const {
+  href,
+  variant = 'primary',
+  size = 'default',
+  icon,
+  iconPosition = 'end',
+  type = 'button',
+  class: className,
+  ...rest
+} = Astro.props;
+
+const classes = [
+  'btn',
+  variant !== 'primary' && `btn--${variant}`,
+  size === 'small' && 'btn--small',
+  className,
+];
+const external = href ? isExternal(href) : false;
+const showExternalHint = external && !icon;
+---
+
+{
+  href ? (
+    <a
+      class:list={classes}
+      href={url(href)}
+      target={external ? '_blank' : undefined}
+      rel={external ? 'noopener noreferrer' : undefined}
+      {...(rest as HTMLAttributes<'a'>)}
+    >
+      {icon && iconPosition === 'start' && <Icon name={icon} />}
+      <slot />
+      {icon && iconPosition === 'end' && <Icon name={icon} />}
+      {showExternalHint && <Icon name="external" />}
+      {external && <span class="visually-hidden"> (opens in a new tab)</span>}
+    </a>
+  ) : (
+    <button class:list={classes} type={type} {...rest}>
+      {icon && iconPosition === 'start' && <Icon name={icon} />}
+      <slot />
+      {icon && iconPosition === 'end' && <Icon name={icon} />}
+    </button>
+  )
+}

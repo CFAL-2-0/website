@@ -1,0 +1,90 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHeader from '../../components/layout/PageHeader.astro';
+import ResearchArea from '../../components/research/ResearchArea.astro';
+import { getProjects, getPublications, getResearchAreas, projectsInArea } from '../../lib/content';
+
+const areas = await getResearchAreas();
+const projects = await getProjects();
+const publications = await getPublications();
+const publicationsInArea = (areaId: string) =>
+  publications.filter((publication) => publication.data.researchAreas.some((ref) => ref.id === areaId));
+---
+
+<BaseLayout
+  title="Research"
+  description="Research themes of the Computational Fluids and Aerodynamics Laboratory (CFAL) at Embry-Riddle Aeronautical University."
+>
+  <PageHeader
+    eyebrow="Research"
+    title="Research themes"
+    lead="The laboratory’s broad research directions. Individual efforts are described on the Projects pages, and each theme links to its related projects and publications automatically."
+  />
+
+  <nav class="area-index" aria-label="Research areas">
+    <div class="container">
+      <ol class="area-index__list">
+        {
+          areas.map((area, index) => (
+            <li>
+              <a href={`#${area.id}`}>
+                <span class="meta">{String(index + 1).padStart(2, '0')}</span>
+                {area.data.title}
+              </a>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </nav>
+
+  <div class="container">
+    {
+      areas.map((area, index) => (
+        <ResearchArea
+          area={area}
+          index={index}
+          projects={projectsInArea(projects, area.id)}
+          publications={publicationsInArea(area.id)}
+        />
+      ))
+    }
+  </div>
+</BaseLayout>
+
+<style>
+  .area-index {
+    border-bottom: var(--border-thin);
+    background: var(--color-surface);
+  }
+
+  .area-index__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--space-l);
+    list-style: none;
+    padding-block: var(--space-xs);
+  }
+
+  .area-index__list a {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    padding-block: 0.6rem;
+    color: var(--color-navy);
+    font-family: var(--font-display);
+    font-size: 0.9375rem;
+    letter-spacing: 0.03em;
+    text-decoration: none;
+  }
+
+  .area-index__list a:hover {
+    color: var(--color-blue);
+    text-decoration: underline;
+  }
+
+  .area-index__list .meta {
+    color: var(--color-cfal-strong);
+  }
+</style>

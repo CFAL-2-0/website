@@ -1,0 +1,97 @@
+# Research areas (themes) — DEMO CONTENT, REPLACE
+# ------------------------------------------------
+# These are example themes used to demonstrate the layout. They are NOT a
+# statement of CFAL's actual research portfolio. Replace titles, summaries and
+# capabilities with approved text, then set `placeholder: false`.
+#
+# id          unique, URL-safe; used in /research/#<id> and /projects/?area=<id>,
+#             and referenced from projects (researchArea) and publications.
+# image       relative to src/assets/images/ (or a /public path)
+# featured    true = shown in the homepage "Research" overview
+# order       lower numbers appear first
+#
+# Projects whose `researchArea` is omitted are grouped under "Other".
+
+- id: computational-fluid-dynamics
+  title: Computational Fluid Dynamics
+  shortTitle: CFD
+  summary: Placeholder summary for a theme centred on the numerical simulation of fluid flows. Replace with a description of the lab's work in this area.
+  description: Placeholder description. Use this paragraph to explain the questions this theme addresses, the methods involved and how it connects to the lab's other work. Keep it to a few sentences; detailed material belongs on individual project pages.
+  image: research/computational-fluid-dynamics.webp
+  imageAlt: Placeholder visualization of pressure contours and a body-fitted mesh around an airfoil leading edge.
+  capabilities:
+    - Example capability — e.g. solver development
+    - Example capability — e.g. turbulence modelling
+    - Example capability — e.g. verification and validation
+  order: 10
+  featured: true
+  placeholder: true
+
+- id: rotorcraft-aerodynamics
+  title: Rotorcraft Aerodynamics
+  shortTitle: Rotorcraft
+  summary: Placeholder summary for a theme on rotor and rotorcraft flows. Replace with a description of the lab's work in this area.
+  description: Placeholder description. Outline the scope of this theme and the kinds of configurations or phenomena studied once approved content is available.
+  image: research/rotorcraft-aerodynamics.webp
+  imageAlt: Placeholder illustration of helical tip-vortex trajectories below a hovering rotor.
+  capabilities:
+    - Example capability — e.g. rotor wake simulation
+    - Example capability — e.g. performance prediction
+    - Example capability — e.g. interactional aerodynamics
+  order: 20
+  featured: true
+  placeholder: true
+
+- id: propulsion-plume-flows
+  title: Propulsion and Plume Flows
+  shortTitle: Propulsion
+  summary: Placeholder summary for a theme on propulsive jets and plume flows. Replace with a description of the lab's work in this area.
+  description: Placeholder description. Describe the propulsion and plume-related questions this theme covers when approved text is supplied.
+  image: research/propulsion-plume-flows.webp
+  imageAlt: Placeholder visualization of a model jet exhausting from a nozzle.
+  capabilities:
+    - Example capability — e.g. jet and plume simulation
+    - Example capability — e.g. compressible flow analysis
+    - Example capability — e.g. plume–surface interaction
+  order: 30
+  featured: true
+  placeholder: true
+
+- id: multiphysics
+  title: Multiphysics
+  summary: Placeholder summary for a theme on coupled flow physics. Replace with a description of the lab's work in this area.
+  description: Placeholder description. Explain which physical couplings this theme considers once approved text is supplied.
+  image: research/multiphysics.webp
+  imageAlt: Placeholder visualization of a vortex street and scalar field behind a cylinder.
+  capabilities:
+    - Example capability — e.g. fluid–structure interaction
+    - Example capability — e.g. multiphase flow
+    - Example capability — e.g. coupled solver workflows
+  order: 40
+  featured: true
+  placeholder: true
+
+- id: aeroacoustics
+  title: Aeroacoustics
+  summary: Placeholder summary for a theme on flow-generated sound. Replace with a description of the lab's work in this area.
+  description: Placeholder description. Describe the aeroacoustic problems and methods relevant to this theme once approved text is supplied.
+  image: research/aeroacoustics.webp
+  imageAlt: Placeholder visualization of acoustic wavefronts radiating from a moving source.
+  capabilities:
+    - Example capability — e.g. noise source modelling
+    - Example capability — e.g. acoustic propagation
+  order: 50
+  placeholder: true
+
+- id: high-performance-computing
+  title: High-Performance Computing
+  shortTitle: HPC
+  summary: Placeholder summary for a theme on large-scale computation. Replace with a description of the lab's work in this area.
+  description: Placeholder description. Describe computing resources, workflows or methods here once approved text is supplied.
+  image: research/high-performance-computing.webp
+  imageAlt: Placeholder illustration of an unstructured mesh partitioned into parallel subdomains.
+  capabilities:
+    - Example capability — e.g. parallel scaling
+    - Example capability — e.g. workflow automation
+  order: 60
+  placeholder: true

@@ -1,0 +1,96 @@
+---
+import type { GetStaticPaths, InferGetStaticPropsType } from 'astro';
+import { getEntries, render } from 'astro:content';
+import ContentLayout from '../../layouts/ContentLayout.astro';
+import DetailList from '../../components/ui/DetailList.astro';
+import Media from '../../components/ui/Media.astro';
+import Icon from '../../components/ui/Icon.astro';
+import { displayName, getNews, personHref, projectHref } from '../../lib/content';
+import { formatDate, isoDate } from '../../lib/format';
+import { imageUrl } from '../../lib/images';
+import { url } from '../../lib/url';
+
+export const getStaticPaths = (async () => {
+  const posts = await getNews();
+  return posts.map((post) => ({ params: { slug: post.id }, props: { post } }));
+}) satisfies GetStaticPaths;
+
+type Props = InferGetStaticPropsType<typeof getStaticPaths>;
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+const data = post.data;
+const people = await getEntries(data.people);
+const projects = await getEntries(data.projects);
+const socialImage = await imageUrl(data.image, { width: 1200, format: 'jpg' });
+---
+
+<ContentLayout
+  title={data.title}
+  description={data.excerpt}
+  type="article"
+  publishedTime={data.date}
+  image={socialImage ? new URL(socialImage, Astro.site).href : undefined}
+  imageAlt={data.imageAlt || undefined}
+  eyebrow={data.category ?? 'News'}
+  placeholder={data.placeholder}
+>
+  <p slot="header" class="news-date meta">
+    <time datetime={isoDate(data.date)}>{formatDate(data.date)}</time>
+  </p>
+
+  <article class="news-article">
+    {
+      data.image && (
+        <Media
+          class="news-article__image"
+          src={data.image}
+          alt={data.imageAlt}
+          aspect="16 / 9"
+          sizes="(min-width: 60em) 46rem, 100vw"
+          widths={[640, 960, 1400]}
+          priority
+        />
+      )
+    }
+    <div class="prose">
+      <Content />
+    </div>
+    <p class="news-article__back">
+      <a class="arrow-link" href={url('/news/')}>All news <Icon name="arrow-right" /></a>
+    </p>
+  </article>
+
+  <DetailList
+    slot="aside"
+    title="Related"
+    rows={[
+      { label: 'Published', value: formatDate(data.date) },
+      { label: 'Category', value: data.category },
+      { label: 'People', items: people.map((p) => ({ label: displayName(p), href: personHref(p) })) },
+      { label: 'Projects', items: projects.map((p) => ({ label: p.data.title, href: projectHref(p) })) },
+    ]}
+  />
+</ContentLayout>
+
+<style>
+  .news-date {
+    color: var(--color-on-dark-muted);
+  }
+
+  .news-article {
+    display: grid;
+    gap: var(--space-l);
+  }
+
+  .news-article :global(.news-article__image) {
+    max-width: 70ch;
+    border: var(--border-thin);
+  }
+
+  .news-article__back {
+    padding-top: var(--space-m);
+    border-top: var(--border-thin);
+    max-width: 70ch;
+  }
+</style>

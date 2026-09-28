@@ -1,0 +1,192 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHeader from '../../components/layout/PageHeader.astro';
+import Button from '../../components/ui/Button.astro';
+import DemoBadge from '../../components/ui/DemoBadge.astro';
+import { getOpportunities } from '../../lib/content';
+
+// Content comes from src/data/opportunities.yaml (one entry per audience).
+const tracks = await getOpportunities();
+const hasPlaceholders = tracks.some((track) => track.data.placeholder);
+---
+
+<BaseLayout
+  title="Join Us"
+  description="Research opportunities for graduate students, undergraduate researchers and postdoctoral researchers at the Computational Fluids and Aerodynamics Laboratory (CFAL)."
+>
+  <PageHeader
+    eyebrow="Join Us"
+    title="Join the laboratory"
+    lead="Information for prospective graduate students, undergraduate researchers and postdoctoral researchers."
+  >
+    <nav class="join-jump" aria-label="On this page">
+      <ul>
+        {
+          tracks.map((track) => (
+            <li>
+              <a href={`#${track.id}`}>{track.data.title}</a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+  </PageHeader>
+
+  {
+    hasPlaceholders && (
+      <div class="container">
+        <p class="join-note">
+          <strong>Placeholder content.</strong> Recruiting language, application instructions and contact details on this
+          page are placeholders until they are supplied by the lab. No positions are currently advertised here.
+        </p>
+      </div>
+    )
+  }
+
+  {
+    tracks.map((track, index) => (
+      <section
+        id={track.id}
+        class:list={['section', 'join-track', index % 2 === 1 && 'section--surface']}
+        aria-labelledby={`${track.id}-title`}
+      >
+        <div class="container join-track__inner">
+          <header class="join-track__header">
+            <p class="meta join-track__index">{String(index + 1).padStart(2, '0')}</p>
+            <h2 id={`${track.id}-title`}>{track.data.title}</h2>
+            {track.data.placeholder && <DemoBadge />}
+            <p class="lead">{track.data.summary}</p>
+          </header>
+
+          <div class="join-track__grid">
+            <div class="join-block">
+              <h3>Desired background</h3>
+              {track.data.backgrounds.length > 0 ? (
+                <ul>
+                  {track.data.backgrounds.map((item) => (
+                    <li>{item}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p class="pending">To be added</p>
+              )}
+            </div>
+
+            <div class="join-block">
+              <h3>Available opportunities</h3>
+              {track.data.opportunities.length > 0 ? (
+                <ul>
+                  {track.data.opportunities.map((item) => (
+                    <li>{item}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p class="join-block__empty">No openings are currently listed. Check back later.</p>
+              )}
+            </div>
+
+            <div class="join-block">
+              <h3>How to apply</h3>
+              {track.data.application.length > 0 ? (
+                <ol>
+                  {track.data.application.map((item) => (
+                    <li>{item}</li>
+                  ))}
+                </ol>
+              ) : (
+                <p class="pending">To be added</p>
+              )}
+            </div>
+
+            <div class="join-block">
+              <h3>Funding</h3>
+              {track.data.funding ? <p>{track.data.funding}</p> : <p class="pending">To be added</p>}
+            </div>
+          </div>
+
+          <div class="join-track__cta">
+            <Button href="/contact/" icon="arrow-right">
+              {track.data.contactLabel}
+            </Button>
+          </div>
+        </div>
+      </section>
+    ))
+  }
+</BaseLayout>
+
+<style>
+  .join-jump ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2xs) var(--space-m);
+    list-style: none;
+    margin-top: var(--space-2xs);
+  }
+
+  .join-jump a {
+    display: inline-flex;
+    min-height: 2.75rem;
+    align-items: center;
+    font-family: var(--font-display);
+    letter-spacing: 0.04em;
+  }
+
+  .join-note {
+    margin-top: var(--space-l);
+    padding: var(--space-s) var(--space-m);
+    border-left: 3px solid var(--color-gold);
+    background: var(--color-placeholder-bg);
+    font-size: var(--step--1);
+  }
+
+  .join-track__inner {
+    display: grid;
+    gap: var(--space-l);
+  }
+
+  .join-track__header {
+    display: grid;
+    justify-items: start;
+    gap: var(--space-xs);
+    max-width: 48rem;
+  }
+
+  .join-track__index {
+    color: var(--color-cfal-strong);
+  }
+
+  .join-track__grid {
+    display: grid;
+    gap: var(--space-m);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  }
+
+  .join-block {
+    padding: var(--space-m);
+    border: var(--border-thin);
+    border-top: 3px solid var(--color-navy);
+    background: var(--color-background);
+  }
+
+  .join-block h3 {
+    margin-bottom: var(--space-xs);
+    font-size: var(--step-1);
+  }
+
+  .join-block ul,
+  .join-block ol {
+    display: grid;
+    gap: 0.4rem;
+    padding-left: 1.2em;
+    font-size: var(--step--1);
+  }
+
+  .join-block p {
+    font-size: var(--step--1);
+  }
+
+  .join-block__empty {
+    color: var(--color-muted);
+  }
+</style>

@@ -1,0 +1,34 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHeader from '../../components/layout/PageHeader.astro';
+import NewsCard from '../../components/news/NewsCard.astro';
+import { getNews } from '../../lib/content';
+
+const posts = await getNews();
+---
+
+<BaseLayout title="News" description="News and updates from the Computational Fluids and Aerodynamics Laboratory (CFAL).">
+  <PageHeader eyebrow="News" title="News" lead="Updates from the laboratory: publications, conferences, awards and student news." />
+
+  <section class="section section--tight" aria-label="News articles">
+    <div class="container">
+      {
+        posts.length > 0 ? (
+          <div class="card-grid">
+            {posts.map((post) => (
+              <NewsCard post={post} headingLevel="h2" />
+            ))}
+          </div>
+        ) : (
+          <p class="news-empty">News will be posted here.</p>
+        )
+      }
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .news-empty {
+    color: var(--color-muted);
+  }
+</style>

@@ -1,0 +1,89 @@
+---
+/** Compact research-area card used on the homepage overview. */
+import Media from '../ui/Media.astro';
+import Icon from '../ui/Icon.astro';
+import DemoBadge from '../ui/DemoBadge.astro';
+import { researchAreaHref, type ResearchArea } from '../../lib/content';
+
+interface Props {
+  area: ResearchArea;
+  index?: number;
+  headingLevel?: 'h3' | 'h4';
+}
+
+const { area, index, headingLevel: Heading = 'h3' } = Astro.props;
+const { title, summary, image, imageAlt, placeholder } = area.data;
+---
+
+<article class="area-card card-hover">
+  <Media
+    src={image}
+    alt={imageAlt}
+    aspect="16 / 10"
+    sizes="(min-width: 64em) 25vw, (min-width: 40em) 50vw, 100vw"
+    widths={[400, 640, 960]}
+  />
+  <div class="area-card__body">
+    {index !== undefined && <span class="area-card__index meta">{String(index + 1).padStart(2, '0')}</span>}
+    <Heading class="area-card__title">
+      <a class="stretched-link" href={researchAreaHref(area)}>{title}</a>
+    </Heading>
+    <p class="area-card__summary">{summary}</p>
+    {placeholder && <DemoBadge />}
+    <span class="arrow-link area-card__more" aria-hidden="true">
+      Explore <Icon name="arrow-right" />
+    </span>
+  </div>
+</article>
+
+<style>
+  .area-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--color-background);
+    border: var(--border-thin);
+    border-top: 3px solid var(--color-navy);
+    transition:
+      border-color var(--duration-base) var(--ease-out),
+      box-shadow var(--duration-base) var(--ease-out);
+  }
+
+  .area-card:hover {
+    border-top-color: var(--color-cfal);
+    box-shadow: var(--shadow-m);
+  }
+
+  .area-card__body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2xs);
+    padding: var(--space-m);
+  }
+
+  .area-card__index {
+    color: var(--color-cfal-strong);
+  }
+
+  .area-card__title {
+    font-size: var(--step-2);
+  }
+
+  .area-card__title a {
+    color: var(--color-navy);
+    text-decoration: none;
+  }
+
+  .area-card__summary {
+    color: var(--color-muted);
+    font-size: var(--step--1);
+    line-height: 1.6;
+  }
+
+  .area-card__more {
+    margin-top: auto;
+    padding-top: var(--space-xs);
+  }
+</style>

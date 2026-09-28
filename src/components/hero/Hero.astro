@@ -1,0 +1,224 @@
+---
+/**
+ * Layered hero used by the homepage and interior page headers.
+ *
+ *   ┌ .hero ─────────────────────────────────────────────┐
+ *   │ 1 .hero__media      <HeroMedia> or slot="media"     │  image | video | canvas | none
+ *   │ 2 .hero__overlay    readability gradient            │
+ *   │ 3 .hero__technical  grid + streamlines (optional)   │
+ *   │ 4 .hero__content    default slot (typography)       │
+ *   │ 5 .hero__controls   caption + video pause control   │
+ *   └─────────────────────────────────────────────────────┘
+ *
+ * The media layer is absolutely positioned and fills the hero, so swapping
+ * an image for a video or canvas never affects the content layout.
+ * A custom visualization can also be passed directly:
+ *   <Hero><MyWebGLScene slot="media" /> …content… </Hero>
+ */
+import HeroMedia from './HeroMedia.astro';
+import FlowLines from '../ui/FlowLines.astro';
+import Icon from '../ui/Icon.astro';
+import type { HeroMediaConfig } from '../../lib/hero';
+
+interface Props {
+  media?: HeroMediaConfig;
+  size?: 'home' | 'page';
+  /** Show the grid/streamline technical layer. */
+  technical?: boolean;
+  labelledby?: string;
+  class?: string;
+}
+
+const { media, size = 'page', technical = true, labelledby, class: className } = Astro.props;
+const hasMediaSlot = Astro.slots.has('media');
+const hasMedia = hasMediaSlot || (media && media.type !== 'none');
+---
+
+<section
+  class:list={['hero', `hero--${size}`, hasMedia ? 'hero--has-media' : 'hero--plain', className]}
+  aria-labelledby={labelledby}
+  data-hero
+>
+  <div class="hero__media">
+    {hasMediaSlot ? <slot name="media" /> : media && <HeroMedia {...media} priority={size === 'home'} />}
+  </div>
+  <div class="hero__overlay" aria-hidden="true"></div>
+  {
+    technical && (
+      <div class="hero__technical" aria-hidden="true">
+        <div class="hero__grid" />
+        <FlowLines class="hero__flow" lines={size === 'home' ? 18 : 14} />
+      </div>
+    )
+  }
+  <div class="hero__content container on-dark">
+    <slot />
+  </div>
+  {
+    (media?.caption || media?.type === 'video') && (
+      <div class="hero__controls container on-dark">
+        {media.type === 'video' && (
+          <button class="hero__video-toggle" type="button" data-state="playing" data-hero-video-toggle hidden>
+            <Icon name="pause" class="hero__video-pause" />
+            <Icon name="play" class="hero__video-play" />
+            <span data-hero-video-label>Pause background video</span>
+          </button>
+        )}
+        {media.caption && <p class="hero__caption">{media.caption}</p>}
+      </div>
+    )
+  }
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    display: grid;
+    grid-template-rows: 1fr auto;
+    overflow: hidden;
+    isolation: isolate;
+    background: var(--color-navy-deep);
+    color: var(--color-on-dark);
+  }
+
+  .hero__media,
+  .hero__overlay,
+  .hero__technical {
+    position: absolute;
+    inset: 0;
+  }
+
+  .hero__media {
+    z-index: 0;
+  }
+
+  .hero__overlay {
+    z-index: 1;
+  }
+
+  .hero__technical {
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .hero__content {
+    position: relative;
+    z-index: 3;
+    align-self: center;
+  }
+
+  .hero__controls {
+    position: relative;
+    z-index: 4;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2xs) var(--space-m);
+    padding-bottom: var(--space-s);
+  }
+
+  /* ---------- sizes ---------- */
+  .hero--home {
+    min-height: clamp(32rem, 78svh, 56rem);
+  }
+
+  .hero--home .hero__content {
+    padding-block: var(--space-2xl) var(--space-xl);
+  }
+
+  .hero--page .hero__content {
+    padding-block: clamp(2.75rem, 1.8rem + 4vw, 5rem);
+  }
+
+  /* ---------- overlay ---------- */
+  .hero--has-media .hero__overlay {
+    background:
+      linear-gradient(0deg, rgb(2 10 34 / 0.7) 0%, transparent 35%),
+      linear-gradient(90deg, rgb(2 10 34 / 0.88) 0%, rgb(2 10 34 / 0.72) 45%, rgb(2 10 34 / 0.2) 80%, rgb(2 10 34 / 0.05) 100%);
+  }
+
+  .hero--page.hero--has-media .hero__overlay {
+    background:
+      linear-gradient(0deg, rgb(2 10 34 / 0.6) 0%, transparent 55%),
+      linear-gradient(90deg, rgb(2 10 34 / 0.9) 0%, rgb(2 10 34 / 0.7) 45%, rgb(2 10 34 / 0.2) 100%);
+  }
+
+  .hero--plain .hero__overlay {
+    background:
+      radial-gradient(ellipse 60% 90% at 85% 100%, rgb(29 67 134 / 0.55), transparent 70%),
+      linear-gradient(180deg, var(--color-navy) 0%, var(--color-navy-deep) 100%);
+  }
+
+  @media (max-width: 47.99em) {
+    .hero--has-media .hero__overlay {
+      background:
+        linear-gradient(0deg, rgb(2 10 34 / 0.85) 0%, transparent 50%),
+        linear-gradient(90deg, rgb(2 10 34 / 0.82), rgb(2 10 34 / 0.62));
+    }
+  }
+
+  /* ---------- technical layer ---------- */
+  .hero__grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgb(255 255 255 / 0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(255 255 255 / 0.045) 1px, transparent 1px);
+    background-size: var(--grid-size) var(--grid-size);
+    mask-image: linear-gradient(90deg, transparent 30%, #000 85%);
+  }
+
+  .hero__technical :global(.hero__flow) {
+    position: absolute;
+    inset: 0;
+    color: var(--color-cfal);
+    opacity: 0.22;
+  }
+
+  .hero--has-media .hero__technical :global(.hero__flow) {
+    opacity: 0;
+  }
+
+  .hero--has-media .hero__grid {
+    mask-image: linear-gradient(90deg, #000 0%, transparent 55%);
+    opacity: 0.8;
+  }
+
+  /* ---------- controls ---------- */
+  .hero__caption {
+    margin-left: auto;
+    max-width: 36rem;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.02em;
+    line-height: 1.5;
+    color: var(--color-on-dark-muted);
+    text-align: right;
+  }
+
+  .hero__video-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 2.25rem;
+    padding: 0.3rem 0.7rem;
+    border: 1px solid rgb(255 255 255 / 0.45);
+    border-radius: var(--radius-s);
+    background: rgb(2 10 34 / 0.5);
+    color: var(--color-on-dark);
+    font-size: var(--step--1);
+  }
+
+  .hero__video-toggle[data-state='paused'] :global(.hero__video-pause),
+  .hero__video-toggle[data-state='playing'] :global(.hero__video-play) {
+    display: none;
+  }
+
+  @media (max-width: 47.99em) {
+    .hero__caption {
+      margin-left: 0;
+      text-align: left;
+    }
+  }
+</style>

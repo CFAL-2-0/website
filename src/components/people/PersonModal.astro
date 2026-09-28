@@ -1,0 +1,333 @@
+---
+/**
+ * Profile dialog built on native <dialog>:
+ * - Escape closes (native); backdrop click closes (closedby="any" + fallback);
+ * - explicit close button; focus moves into the dialog on open and returns to
+ *   the originating card on close; page scroll is locked while open;
+ * - /team/#<slug> opens the matching profile directly.
+ * Optional schema fields (bio, links, email, alumni details) render only
+ * when present.
+ */
+import Media from '../ui/Media.astro';
+import Icon from '../ui/Icon.astro';
+import Button from '../ui/Button.astro';
+import DemoBadge from '../ui/DemoBadge.astro';
+import ScholarLink from '../ui/ScholarLink.astro';
+import { displayName, personStatus, type Person } from '../../lib/content';
+
+interface Props {
+  person: Person;
+}
+
+const { person } = Astro.props;
+const {
+  name,
+  role,
+  title,
+  portrait,
+  portraitAlt,
+  researchInterests,
+  googleScholar,
+  profileUrl,
+  website,
+  email,
+  bio,
+  links,
+  graduationYear,
+  currentPosition,
+  placeholder,
+} = person.data;
+const dialogId = `person-${person.id}`;
+const isPI = role === 'pi';
+---
+
+<dialog
+  id={dialogId}
+  class="person-dialog"
+  aria-labelledby={`${dialogId}-name`}
+  closedby="any"
+  data-person-dialog={person.id}
+>
+  <div class="person-dialog__inner">
+    <button
+      type="button"
+      class="person-dialog__close"
+      commandfor={dialogId}
+      command="close"
+      data-dialog-close
+      autofocus
+    >
+      <Icon name="close" />
+      <span class="visually-hidden">Close profile</span>
+    </button>
+
+    <div class="person-dialog__portrait">
+      <Media
+        src={portrait}
+        alt={portraitAlt ?? `Portrait of ${name}`}
+        aspect="4 / 5"
+        fallback="portrait"
+        sizes="(min-width: 48em) 17rem, 45vw"
+        widths={[320, 480, 640]}
+      />
+    </div>
+
+    <div class="person-dialog__content">
+      <p class="person-dialog__status">{personStatus(person)}</p>
+      <h2 id={`${dialogId}-name`} class="person-dialog__name">{displayName(person)}</h2>
+      {title && <p class="person-dialog__title">{title}</p>}
+      {isPI && !title && <p class="person-dialog__title pending">Academic title to be added</p>}
+      {placeholder && <DemoBadge />}
+
+      <section class="person-dialog__section" aria-labelledby={`${dialogId}-interests`}>
+        <h3 id={`${dialogId}-interests`} class="person-dialog__subhead">Research interests</h3>
+        {
+          researchInterests.length > 0 ? (
+            <ul class="person-dialog__interests">
+              {researchInterests.map((interest) => (
+                <li>{interest}</li>
+              ))}
+            </ul>
+          ) : (
+            <p class="pending">Research interests to be added</p>
+          )
+        }
+      </section>
+
+      {bio && <p class="person-dialog__bio">{bio}</p>}
+
+      {
+        (currentPosition || graduationYear) && (
+          <p class="person-dialog__alumni">
+            {[currentPosition, graduationYear && `Graduated ${graduationYear}`].filter(Boolean).join(' · ')}
+          </p>
+        )
+      }
+
+      <div class="btn-row person-dialog__links">
+        <ScholarLink
+          href={googleScholar}
+          context={name}
+          pendingLabel={isPI ? 'Google Scholar profile to be added' : undefined}
+        />
+        {profileUrl && (
+          <Button href={profileUrl} variant="ghost" size="small">
+            Institutional profile
+          </Button>
+        )}
+        {website && (
+          <Button href={website} variant="ghost" size="small">
+            Website
+          </Button>
+        )}
+        {email && (
+          <Button href={`mailto:${email}`} variant="ghost" size="small" icon="mail" iconPosition="start">
+            Email
+          </Button>
+        )}
+        {links.map((link) => (
+          <Button href={link.url} variant="ghost" size="small">
+            {link.label}
+          </Button>
+        ))}
+      </div>
+    </div>
+  </div>
+</dialog>
+
+<script>
+  const supportsInvokers = 'commandForElement' in HTMLButtonElement.prototype;
+  let lastOpener: HTMLElement | null = null;
+
+  const openerFor = (slug: string) =>
+    document.querySelector<HTMLElement>(`[data-person-open="${CSS.escape(slug)}"]`);
+
+  document.querySelectorAll<HTMLButtonElement>('[data-person-open]').forEach((button) => {
+    button.addEventListener('click', () => {
+      lastOpener = button;
+      if (supportsInvokers) return;
+      const dialog = document.getElementById(button.getAttribute('commandfor') ?? '');
+      if (dialog instanceof HTMLDialogElement && !dialog.open) dialog.showModal();
+    });
+  });
+
+  document.querySelectorAll<HTMLDialogElement>('[data-person-dialog]').forEach((dialog) => {
+    const slug = dialog.dataset.personDialog ?? '';
+
+    // Backdrop click: the dialog element itself is the target only when the
+    // click lands outside the inner panel.
+    dialog.addEventListener('click', (event) => {
+      if (event.target === dialog) dialog.close();
+    });
+
+    if (!supportsInvokers) {
+      dialog.querySelector('[data-dialog-close]')?.addEventListener('click', () => dialog.close());
+    }
+
+    dialog.addEventListener('close', () => {
+      (lastOpener ?? openerFor(slug))?.focus();
+      lastOpener = null;
+      if (decodeURIComponent(location.hash.slice(1)) === slug) {
+        history.replaceState(null, '', location.pathname + location.search);
+      }
+    });
+  });
+
+  // Deep links: /team/#<slug> opens that profile.
+  const openFromHash = () => {
+    const slug = decodeURIComponent(location.hash.slice(1));
+    if (!slug) return;
+    const dialog = document.querySelector<HTMLDialogElement>(`[data-person-dialog="${CSS.escape(slug)}"]`);
+    if (dialog && !dialog.open) {
+      lastOpener = openerFor(slug);
+      dialog.showModal();
+    }
+  };
+  openFromHash();
+  window.addEventListener('hashchange', openFromHash);
+</script>
+
+<style>
+  .person-dialog {
+    width: min(100% - 2rem, 50rem);
+    max-height: min(100% - 2rem, 44rem);
+    padding: 0;
+    border: 0;
+    border-top: 4px solid var(--color-navy);
+    border-radius: var(--radius-m);
+    background: var(--color-background);
+    color: var(--color-text);
+    box-shadow: var(--shadow-dialog);
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+
+  .person-dialog::backdrop {
+    background: rgb(2 10 34 / 0.72);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .person-dialog[open] {
+      animation: dialog-in var(--duration-base) var(--ease-out);
+    }
+
+    @keyframes dialog-in {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+    }
+  }
+
+  .person-dialog__inner {
+    position: relative;
+    display: grid;
+    gap: var(--space-m);
+    padding: var(--space-m);
+  }
+
+  .person-dialog__close {
+    position: absolute;
+    top: var(--space-2xs);
+    right: var(--space-2xs);
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: var(--radius-s);
+    background: var(--color-background);
+    color: var(--color-navy);
+  }
+
+  .person-dialog__close:hover {
+    border-color: var(--color-border-strong);
+    background: var(--color-surface);
+  }
+
+  .person-dialog__close :global(svg) {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  .person-dialog__portrait {
+    width: min(100%, 12rem);
+  }
+
+  .person-dialog__content {
+    display: grid;
+    justify-items: start;
+    align-content: start;
+    gap: var(--space-2xs);
+  }
+
+  .person-dialog__status {
+    font-family: var(--font-display);
+    font-size: 0.875rem;
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    color: var(--color-cfal-strong);
+  }
+
+  .person-dialog__name {
+    padding-right: 2.5rem;
+    font-size: var(--step-4);
+  }
+
+  .person-dialog__title {
+    color: var(--color-muted);
+  }
+
+  .person-dialog__section {
+    width: 100%;
+    margin-top: var(--space-s);
+  }
+
+  .person-dialog__subhead {
+    margin-bottom: var(--space-2xs);
+    padding-bottom: var(--space-3xs);
+    border-bottom: var(--border-thin);
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+  }
+
+  .person-dialog__interests {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2xs);
+    list-style: none;
+  }
+
+  .person-dialog__interests li {
+    padding: 0.2em 0.65em;
+    border: var(--border-thin);
+    background: var(--color-surface);
+    font-size: var(--step--1);
+  }
+
+  .person-dialog__bio,
+  .person-dialog__alumni {
+    margin-top: var(--space-2xs);
+    color: var(--color-muted);
+  }
+
+  .person-dialog__links {
+    margin-top: var(--space-s);
+  }
+
+  @media (min-width: 40em) {
+    .person-dialog__inner {
+      grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+      gap: var(--space-l);
+      padding: var(--space-l);
+    }
+
+    .person-dialog__portrait {
+      width: 100%;
+    }
+  }
+</style>

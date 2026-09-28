@@ -1,0 +1,278 @@
+---
+/**
+ * Site footer: identity band with the supplied banner, then navigation,
+ * contact and university links. Unknown contact details render as visible
+ * placeholders rather than guesses (see site.config.ts).
+ */
+import { getEntry } from 'astro:content';
+import ExternalLink from '../ui/ExternalLink.astro';
+import ScholarLink from '../ui/ScholarLink.astro';
+import FlowLines from '../ui/FlowLines.astro';
+import { navigation, site } from '../../site.config';
+import { displayName, personHref } from '../../lib/content';
+import { url } from '../../lib/url';
+
+const pi = await getEntry('people', site.principalInvestigator);
+const { contact, links, branding } = site;
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <div class="footer-identity">
+    <div class="container footer-identity__inner">
+      <img
+        class="footer-identity__banner"
+        src={url(branding.banner)}
+        width={branding.bannerWidth}
+        height={branding.bannerHeight}
+        alt={`${site.university} — ${site.department} — ${site.shortName}`}
+        loading="lazy"
+        decoding="async"
+      />
+      <p class="footer-identity__name">{site.name}</p>
+    </div>
+  </div>
+
+  <div class="footer-main on-dark">
+    <FlowLines class="footer-main__flow" lines={12} />
+    <div class="container footer-grid">
+      <section class="footer-lab" aria-labelledby="footer-lab-title">
+        <h2 id="footer-lab-title" class="footer-lab__acronym">{site.shortName}</h2>
+        <p class="footer-lab__lines">
+          <span>{site.name}</span>
+          <span>{site.department}</span>
+          <span>{site.university}</span>
+        </p>
+      </section>
+
+      <nav class="footer-col" aria-labelledby="footer-nav-title">
+        <h2 id="footer-nav-title" class="footer-heading">Explore</h2>
+        <ul class="footer-list footer-list--columns">
+          {
+            navigation.map((item) => (
+              <li>
+                <a href={url(item.href)}>{item.label}</a>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+
+      <section class="footer-col" aria-labelledby="footer-contact-title">
+        <h2 id="footer-contact-title" class="footer-heading">Contact</h2>
+        <ul class="footer-list">
+          {
+            pi && (
+              <li>
+                <span class="footer-label">Principal Investigator</span>
+                <a href={personHref(pi)}>{displayName(pi)}</a>
+              </li>
+            )
+          }
+          <li>
+            <span class="footer-label">Email</span>
+            {
+              contact.email ? (
+                <a href={`mailto:${contact.email}`}>{contact.email}</a>
+              ) : (
+                <span class="pending">Lab email to be added</span>
+              )
+            }
+          </li>
+          <li>
+            <span class="footer-label">Location</span>
+            {
+              contact.building ? (
+                <span>{[contact.building, contact.room].filter(Boolean).join(', ')}</span>
+              ) : (
+                <span class="pending">Lab location to be added</span>
+              )
+            }
+          </li>
+          <li><a href={url('/contact/')}>All contact details</a></li>
+        </ul>
+      </section>
+
+      <section class="footer-col" aria-labelledby="footer-links-title">
+        <h2 id="footer-links-title" class="footer-heading">Links</h2>
+        <ul class="footer-list">
+          <li>
+            <ScholarLink
+              variant="inline"
+              href={links.labGoogleScholar || pi?.data.googleScholar}
+              label="Google Scholar"
+              context={pi ? displayName(pi) : undefined}
+              pendingLabel="Google Scholar profile to be added"
+            />
+          </li>
+          <li><ExternalLink href={links.university}>{site.university}</ExternalLink></li>
+          <li><ExternalLink href={links.universityResearch}>Research at Embry-Riddle</ExternalLink></li>
+          <li>
+            {
+              links.department ? (
+                <ExternalLink href={links.department}>{site.department}</ExternalLink>
+              ) : (
+                <span class="pending">Department website link to be added</span>
+              )
+            }
+          </li>
+        </ul>
+      </section>
+    </div>
+  </div>
+
+  <div class="footer-bottom on-dark">
+    <div class="container footer-bottom__inner">
+      <p>© {year} {site.name}, {site.university}.</p>
+      <a href="#main" class="footer-top">Back to top</a>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    margin-top: auto;
+  }
+
+  .footer-identity {
+    border-top: var(--border-thin);
+    background: var(--color-background);
+  }
+
+  .footer-identity__inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-s) var(--space-l);
+    padding-block: var(--space-m);
+  }
+
+  .footer-identity__banner {
+    width: min(100%, 26rem);
+    height: auto;
+  }
+
+  .footer-identity__name {
+    font-family: var(--font-display);
+    font-size: var(--step-1);
+    font-weight: 500;
+    color: var(--color-navy);
+  }
+
+  .footer-main {
+    position: relative;
+    overflow: hidden;
+    background: var(--color-navy);
+    color: var(--color-on-dark-muted);
+    padding-block: var(--space-xl);
+  }
+
+  .footer-main :global(.footer-main__flow) {
+    position: absolute;
+    inset: 0;
+    color: var(--color-cfal);
+    opacity: 0.18;
+  }
+
+  .footer-grid {
+    position: relative;
+    display: grid;
+    gap: var(--space-l) var(--space-xl);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+  }
+
+  .footer-lab__acronym {
+    font-size: var(--step-4);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: var(--color-on-dark);
+  }
+
+  .footer-lab__lines {
+    display: grid;
+    gap: 0.2rem;
+    margin-top: var(--space-2xs);
+    font-size: var(--step--1);
+    line-height: 1.45;
+  }
+
+  .footer-lab__lines span:first-child {
+    color: var(--color-on-dark);
+  }
+
+  .footer-heading {
+    margin-bottom: var(--space-s);
+    padding-bottom: var(--space-2xs);
+    border-bottom: 1px solid var(--color-on-dark-border);
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    color: var(--color-cfal-light);
+  }
+
+  .footer-list {
+    display: grid;
+    gap: var(--space-xs);
+    list-style: none;
+    font-size: var(--step--1);
+    line-height: 1.45;
+  }
+
+  .footer-list--columns {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-2xs) var(--space-m);
+  }
+
+  .footer-list li {
+    display: grid;
+    justify-items: start;
+  }
+
+  .footer-label {
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    color: var(--color-on-dark-muted);
+    opacity: 0.85;
+  }
+
+  .footer-main a {
+    color: var(--color-on-dark);
+    text-decoration-color: rgb(255 255 255 / 0.35);
+  }
+
+  .footer-main a:hover {
+    color: var(--color-cfal-light);
+    text-decoration-color: currentColor;
+  }
+
+  .footer-main :global(.scholar-pending) {
+    min-height: 0;
+  }
+
+  .footer-bottom {
+    background: var(--color-navy-deep);
+    color: var(--color-on-dark-muted);
+    font-size: var(--step--2);
+  }
+
+  .footer-bottom__inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2xs) var(--space-m);
+    padding-block: var(--space-s);
+  }
+
+  .footer-top {
+    color: var(--color-on-dark);
+  }
+
+  .footer-top:hover {
+    color: var(--color-cfal-light);
+  }
+</style>

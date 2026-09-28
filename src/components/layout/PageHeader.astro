@@ -1,0 +1,50 @@
+---
+/**
+ * Interior page header built on the same layered <Hero>, so pages can later
+ * adopt a background image or video with a single prop.
+ */
+import Hero from '../hero/Hero.astro';
+import DemoBadge from '../ui/DemoBadge.astro';
+import type { HeroMediaConfig } from '../../lib/hero';
+
+interface Props {
+  title: string;
+  eyebrow?: string;
+  lead?: string;
+  media?: HeroMediaConfig;
+  placeholder?: boolean;
+}
+
+const { title, eyebrow, lead, media, placeholder = false } = Astro.props;
+---
+
+<Hero size="page" media={media} labelledby="page-title">
+  <div class="page-header">
+    {eyebrow && <p class="eyebrow">{eyebrow}</p>}
+    <h1 id="page-title" class="page-header__title">{title}</h1>
+    {lead && <p class="page-header__lead">{lead}</p>}
+    {placeholder && <DemoBadge />}
+    <slot />
+  </div>
+</Hero>
+
+<style>
+  .page-header {
+    display: grid;
+    justify-items: start;
+    gap: var(--space-s);
+    max-width: 50rem;
+  }
+
+  .page-header__title {
+    color: var(--color-on-dark);
+    font-size: var(--step-5);
+  }
+
+  .page-header__lead {
+    max-width: 62ch;
+    font-size: var(--step-1);
+    line-height: 1.55;
+    color: var(--color-on-dark-muted);
+  }
+</style>

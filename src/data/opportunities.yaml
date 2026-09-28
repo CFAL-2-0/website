@@ -1,0 +1,58 @@
+# Join Us page — one entry per audience. DEMO CONTENT, REPLACE.
+# ------------------------------------------------------------
+# No positions are currently advertised. Replace the placeholder text with
+# approved recruiting language, then set `placeholder: false`.
+#
+# id             unique, used as the page anchor (/join/#<id>)
+# title          section heading
+# summary        short introduction
+# backgrounds    desired backgrounds / skills (list)
+# opportunities  available opportunities (list; leave empty if none are open)
+# application    application steps (list)
+# funding        funding information (text)
+# contactLabel   label for the contact button
+# order          lower first
+
+- id: graduate
+  title: Prospective Graduate Students
+  summary: Placeholder introduction for prospective MS and PhD students. Describe what graduate research in the lab involves once approved text is supplied.
+  backgrounds:
+    - Desired background placeholder — e.g. degree field
+    - Desired background placeholder — e.g. programming or numerical-methods experience
+    - Desired background placeholder — e.g. fluid mechanics coursework
+  opportunities: []
+  application:
+    - Application step placeholder — e.g. apply to the graduate program
+    - Application step placeholder — e.g. what to include when contacting the lab
+  funding: Funding information placeholder. Describe assistantships or other support only once confirmed.
+  contactLabel: Contact the lab
+  order: 10
+  placeholder: true
+
+- id: undergraduate
+  title: Undergraduate Researchers
+  summary: Placeholder introduction for undergraduate students interested in research experience. Replace with approved text.
+  backgrounds:
+    - Desired background placeholder — e.g. year of study
+    - Desired background placeholder — e.g. relevant courses or skills
+  opportunities: []
+  application:
+    - Application step placeholder — e.g. how and when to express interest
+  funding: Funding information placeholder.
+  contactLabel: Contact the lab
+  order: 20
+  placeholder: true
+
+- id: postdoctoral
+  title: Postdoctoral Researchers
+  summary: Placeholder introduction for prospective postdoctoral researchers. Replace with approved text.
+  backgrounds:
+    - Desired background placeholder — e.g. PhD field
+    - Desired background placeholder — e.g. research experience
+  opportunities: []
+  application:
+    - Application step placeholder — e.g. materials to send
+  funding: Funding information placeholder.
+  contactLabel: Contact the lab
+  order: 30
+  placeholder: true

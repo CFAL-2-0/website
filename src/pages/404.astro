@@ -1,0 +1,14 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHeader from '../components/layout/PageHeader.astro';
+import Button from '../components/ui/Button.astro';
+---
+
+<BaseLayout title="Page not found" noindex>
+  <PageHeader eyebrow="Error 404" title="Page not found" lead="The page you requested does not exist or may have moved.">
+    <div class="btn-row">
+      <Button href="/" variant="light">Home</Button>
+      <Button href="/research/" variant="outline-light">Research</Button>
+    </div>
+  </PageHeader>
+</BaseLayout>

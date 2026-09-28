@@ -1,0 +1,69 @@
+---
+/**
+ * Google Scholar link with a consistent icon treatment. Scholar is never
+ * scraped — this only links out. With no `href`, renders `pendingLabel` as a
+ * visible placeholder if given, otherwise nothing.
+ */
+import Icon from './Icon.astro';
+
+interface Props {
+  href?: string;
+  /** Accessible context, e.g. the person's name or publication title. */
+  context?: string;
+  label?: string;
+  pendingLabel?: string;
+  variant?: 'button' | 'inline';
+  class?: string;
+}
+
+const {
+  href,
+  context,
+  label = 'Google Scholar',
+  pendingLabel,
+  variant = 'button',
+  class: className,
+} = Astro.props;
+---
+
+{
+  href ? (
+    <a
+      class:list={[variant === 'button' ? 'btn btn--ghost btn--small' : 'scholar-inline', className]}
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      <Icon name="scholar" />
+      <span>
+        {label}
+        {context && <span class="visually-hidden"> — {context}</span>}
+        <span class="visually-hidden"> (opens in a new tab)</span>
+      </span>
+    </a>
+  ) : (
+    pendingLabel && (
+      <span class:list={['scholar-pending', className]}>
+        <Icon name="scholar" />
+        <span class="pending">{pendingLabel}</span>
+      </span>
+    )
+  )
+}
+
+<style>
+  .scholar-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35em;
+  }
+
+  .scholar-pending {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45em;
+    min-height: 2.25rem;
+    font-size: var(--step--1);
+    color: var(--color-muted);
+  }
+</style>

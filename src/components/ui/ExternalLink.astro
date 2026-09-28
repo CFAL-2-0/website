@@ -1,0 +1,28 @@
+---
+/** Inline external link: new tab, safe rel, and an accessible hint. */
+import Icon from './Icon.astro';
+
+interface Props {
+  href: string;
+  class?: string;
+}
+
+const { href, class: className } = Astro.props;
+---
+
+<a class:list={['external-link', className]} href={href} target="_blank" rel="noopener noreferrer"
+  ><slot /><Icon name="external" class="external-link__icon" /><span class="visually-hidden">
+    (opens in a new tab)</span
+  ></a
+>
+
+<style>
+  .external-link :global(.external-link__icon) {
+    display: inline-block;
+    width: 0.8em;
+    height: 0.8em;
+    margin-left: 0.25em;
+    vertical-align: -0.05em;
+    opacity: 0.7;
+  }
+</style>

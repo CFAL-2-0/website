@@ -1,0 +1,103 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHeader from '../../components/layout/PageHeader.astro';
+import SectionHeader from '../../components/ui/SectionHeader.astro';
+import PIFeature from '../../components/people/PIFeature.astro';
+import PersonCard from '../../components/people/PersonCard.astro';
+import PersonModal from '../../components/people/PersonModal.astro';
+import { getPeople, getPeopleByRole } from '../../lib/content';
+import { ROLE_INFO } from '../../lib/taxonomy';
+
+// Sections are generated from src/data/people.yaml in role order
+// (pi → postdoc → phd → ms → bs → alumni); empty roles are skipped.
+const groups = await getPeopleByRole();
+const people = await getPeople();
+---
+
+<BaseLayout
+  title="Team"
+  description="Principal investigator and researchers of the Computational Fluids and Aerodynamics Laboratory (CFAL) at Embry-Riddle Aeronautical University."
+>
+  <PageHeader
+    eyebrow="Team"
+    title="People"
+    lead="The principal investigator, researchers and students of the laboratory. Select a researcher to view their profile."
+  />
+
+  {
+    groups.map(({ role, people: members }) =>
+      role === 'pi' ? (
+        <section class="section section--surface team-pi" aria-label={ROLE_INFO.pi.heading}>
+          <div class="container">
+            {members.map((person) => (
+              <PIFeature person={person} variant="team" />
+            ))}
+          </div>
+        </section>
+      ) : (
+        <section class="section team-group" aria-labelledby={`team-${role}`}>
+          <div class="container">
+            <SectionHeader title={ROLE_INFO[role].heading} id={`team-${role}`} />
+            <div class="team-grid">
+              {members.map((person) => (
+                <PersonCard person={person} />
+              ))}
+            </div>
+          </div>
+        </section>
+      ),
+    )
+  }
+
+  {people.map((person) => <PersonModal person={person} />)}
+</BaseLayout>
+
+<style>
+  .team-pi {
+    padding-block: var(--space-xl);
+  }
+
+  .team-group {
+    padding-block: var(--space-xl);
+  }
+
+  .team-group :global(.section-header) {
+    margin-bottom: var(--space-m);
+    padding-bottom: var(--space-2xs);
+    border-bottom: 2px solid var(--color-navy);
+  }
+
+  .team-group :global(.section-header__title) {
+    font-size: var(--step-3);
+  }
+
+  .team-grid {
+    display: grid;
+    gap: var(--space-m);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @media (min-width: 40em) {
+    .team-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 64em) {
+    .team-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 90em) {
+    .team-grid {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 23.99em) {
+    .team-grid {
+      gap: var(--space-s);
+    }
+  }
+</style>

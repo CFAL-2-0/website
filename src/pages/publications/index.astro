@@ -1,0 +1,188 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHeader from '../../components/layout/PageHeader.astro';
+import FilterBar from '../../components/ui/FilterBar.astro';
+import ScholarLink from '../../components/ui/ScholarLink.astro';
+import PublicationItem from '../../components/publications/PublicationItem.astro';
+import { getEntry } from 'astro:content';
+import { displayName, getPublications, getResearchAreas, groupByYear } from '../../lib/content';
+import { site } from '../../site.config';
+
+const publications = await getPublications();
+const groups = groupByYear(publications);
+const areas = await getResearchAreas();
+const pi = await getEntry('people', site.principalInvestigator);
+const scholar = site.links.labGoogleScholar || pi?.data.googleScholar;
+
+const areaOptions = areas
+  .map((area) => ({
+    value: area.id,
+    label: area.data.shortTitle ?? area.data.title,
+    count: publications.filter((p) => p.data.researchAreas.some((ref) => ref.id === area.id)).length,
+  }))
+  .filter((option) => option.count > 0);
+const hasPlaceholders = publications.some((publication) => publication.data.placeholder);
+---
+
+<BaseLayout
+  title="Publications"
+  description="Journal articles, conference papers and theses from the Computational Fluids and Aerodynamics Laboratory (CFAL)."
+>
+  <PageHeader
+    eyebrow="Publications"
+    title="Publications"
+    lead="Journal articles, conference papers and theses, newest first. Each entry links to its DOI, BibTeX citation and Google Scholar."
+  >
+    <ScholarLink
+      href={scholar}
+      context={pi ? displayName(pi) : undefined}
+      label="Full list on Google Scholar"
+      pendingLabel="Google Scholar profile link to be added"
+    />
+  </PageHeader>
+
+  <div class="container pubs-layout">
+    <aside class="pubs-aside" aria-label="Publication years">
+      <nav aria-labelledby="years-title">
+        <h2 id="years-title" class="pubs-aside__title">Years</h2>
+        <ul class="pubs-years">
+          {
+            groups.map(({ year, items }) => (
+              <li>
+                <a href={`#year-${year}`}>
+                  {year} <span class="meta">{items.length}</span>
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+    </aside>
+
+    <div class="pubs-main" id="publication-results">
+      {
+        hasPlaceholders && (
+          <p class="pubs-note">
+            The entries below are clearly labelled demonstration records used to preview the layout. They are not real
+            publications and are not attributed to any lab member.
+          </p>
+        )
+      }
+      {
+        areaOptions.length > 1 && (
+          <FilterBar
+            target="publication-results"
+            noun={{ singular: 'publication', plural: 'publications' }}
+            groups={[{ key: 'area', label: 'Research area', options: areaOptions }]}
+          />
+        )
+      }
+
+      {
+        groups.map(({ year, items }) => (
+          <section class="pubs-year" aria-labelledby={`year-${year}`} data-filter-section>
+            <h2 id={`year-${year}`} class="pubs-year__title">
+              {year}
+            </h2>
+            <div>
+              {items.map((publication) => (
+                <PublicationItem publication={publication} />
+              ))}
+            </div>
+          </section>
+        ))
+      }
+      <p class="pubs-empty" data-filter-empty hidden>No publications match the selected research area.</p>
+      {publications.length === 0 && <p class="pubs-empty">Publications will be listed here.</p>}
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .pubs-layout {
+    display: grid;
+    gap: var(--space-l);
+    padding-block: var(--space-xl) var(--space-section);
+  }
+
+  .pubs-aside__title {
+    margin-bottom: var(--space-2xs);
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .pubs-years {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2xs);
+    list-style: none;
+  }
+
+  .pubs-years a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.5rem;
+    padding: 0.3rem 0.8rem;
+    border: var(--border-thin);
+    color: var(--color-navy);
+    font-family: var(--font-display);
+    font-size: 1rem;
+    text-decoration: none;
+  }
+
+  .pubs-years a:hover {
+    border-color: var(--color-navy);
+  }
+
+  .pubs-note {
+    margin-bottom: var(--space-m);
+    padding: var(--space-s) var(--space-m);
+    border-left: 3px solid var(--color-gold);
+    background: var(--color-placeholder-bg);
+    font-size: var(--step--1);
+  }
+
+  .pubs-year + .pubs-year {
+    margin-top: var(--space-xl);
+  }
+
+  .pubs-year__title {
+    padding-bottom: var(--space-2xs);
+    border-bottom: 2px solid var(--color-navy);
+    font-size: var(--step-4);
+    font-weight: 400;
+    color: var(--color-navy);
+  }
+
+  .pubs-empty {
+    padding: var(--space-l) 0;
+    color: var(--color-muted);
+  }
+
+  @media (min-width: 60em) {
+    .pubs-layout {
+      grid-template-columns: 10rem minmax(0, 1fr);
+      gap: var(--space-2xl);
+    }
+
+    .pubs-aside nav {
+      position: sticky;
+      top: calc(var(--header-nav-h) + var(--space-l));
+    }
+
+    .pubs-years {
+      flex-direction: column;
+    }
+
+    .pubs-years a {
+      width: 100%;
+      justify-content: space-between;
+      border-width: 0 0 1px;
+      padding-inline: 0;
+    }
+  }
+</style>

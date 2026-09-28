@@ -1,0 +1,77 @@
+---
+/**
+ * Decorative streamlines of inviscid flow past a cylinder, computed at build
+ * time (no runtime JS). Used as a restrained technical motif behind headers,
+ * bands and the footer. Colour comes from `currentColor`.
+ *
+ * Stream function (cylinder radius R, centred at cx, cy):
+ *   ψ = y (1 − R² / (x² + y²))
+ */
+interface Props {
+  lines?: number;
+  /** Cylinder centre and radius as fractions of the 1200×600 viewBox. */
+  cx?: number;
+  cy?: number;
+  r?: number;
+  class?: string;
+}
+
+const { lines = 16, cx = 0.78, cy = 1.08, r = 0.36, class: className } = Astro.props;
+
+const W = 1200;
+const H = 600;
+const R = r * W * 0.5;
+const x0 = cx * W;
+const y0 = cy * H;
+
+function solveY(X: number, psi: number): number {
+  // Height above the cylinder axis (in radii) where ψ(X, Y) = psi, Y ≥ surface.
+  let lo = Math.sqrt(Math.max(0, 1 - X * X));
+  let hi = psi + 2;
+  for (let i = 0; i < 48; i++) {
+    const mid = (lo + hi) / 2;
+    const value = mid * (1 - 1 / (X * X + mid * mid));
+    if (value < psi) lo = mid;
+    else hi = mid;
+  }
+  return (lo + hi) / 2;
+}
+
+const paths: string[] = [];
+for (let k = 1; k <= lines; k++) {
+  const psi = 0.04 + (k - 1) * 0.16 + (k - 1) ** 1.35 * 0.02;
+  const points: string[] = [];
+  for (let x = -40; x <= W + 40; x += 24) {
+    const X = (x - x0) / R;
+    const y = y0 - solveY(X, psi) * R;
+    points.push(`${x.toFixed(1)},${y.toFixed(1)}`);
+  }
+  paths.push(`M${points.join('L')}`);
+}
+---
+
+<svg
+  class:list={['flow-lines', className]}
+  viewBox={`0 0 ${W} ${H}`}
+  preserveAspectRatio="xMidYMid slice"
+  aria-hidden="true"
+  focusable="false"
+>
+  {paths.map((d) => <path d={d} />)}
+</svg>
+
+<style>
+  .flow-lines {
+    display: block;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  .flow-lines path {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+  }
+</style>

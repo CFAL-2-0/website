@@ -1,0 +1,212 @@
+---
+/**
+ * Featured principal-investigator panel, given more visual weight than
+ * researcher cards. `variant="team"` opens the PI's profile dialog;
+ * `variant="home"` links to the Team page. Unsupplied fields render as
+ * explicit placeholders — nothing is inferred.
+ */
+import Media from '../ui/Media.astro';
+import Button from '../ui/Button.astro';
+import ScholarLink from '../ui/ScholarLink.astro';
+import { displayName, personHref, personStatus, type Person } from '../../lib/content';
+import { site } from '../../site.config';
+
+interface Props {
+  person: Person;
+  variant?: 'team' | 'home';
+  headingLevel?: 'h2' | 'h3';
+}
+
+const { person, variant = 'team', headingLevel: Heading = 'h2' } = Astro.props;
+const { name, title, portrait, portraitAlt, researchInterests, googleScholar, profileUrl, bio } = person.data;
+const dialogId = `person-${person.id}`;
+const headingId = `pi-${variant}-name`;
+---
+
+<article id={variant === 'team' ? person.id : undefined} class:list={['pi', `pi--${variant}`]} aria-labelledby={headingId}>
+  <div class="pi__portrait">
+    <Media
+      src={portrait}
+      alt={portraitAlt ?? `Portrait of ${name}`}
+      aspect="4 / 5"
+      fallback="portrait"
+      sizes="(min-width: 60em) 20rem, (min-width: 40em) 40vw, 70vw"
+      widths={[320, 480, 640, 800]}
+    />
+    {!portrait && <p class="pi__portrait-note meta">Portrait placeholder</p>}
+  </div>
+
+  <div class="pi__body">
+    <p class="eyebrow">Principal Investigator</p>
+    <Heading id={headingId} class="pi__name">{displayName(person)}</Heading>
+    <p class="pi__role">
+      <span>{personStatus(person)}</span>
+      <span class="pi__sep" aria-hidden="true">·</span>
+      <span>{site.name}</span>
+    </p>
+    <p class:list={['pi__title', !title && 'pending']}>{title || 'Academic title to be added'}</p>
+
+    <div class="pi__description">
+      {
+        bio ? (
+          <p>{bio}</p>
+        ) : (
+          <p class="pending">
+            Short professional summary to be added. This space is reserved for a brief description supplied
+            by Dr. {name.split(' ').at(-1)}.
+          </p>
+        )
+      }
+    </div>
+
+    <div class="pi__interests">
+      <h3 class="pi__subhead">Research interests</h3>
+      {
+        researchInterests.length > 0 ? (
+          <ul class="pi__interest-list">
+            {researchInterests.map((interest) => (
+              <li>{interest}</li>
+            ))}
+          </ul>
+        ) : (
+          <p class="pending">Research interests to be added</p>
+        )
+      }
+    </div>
+
+    <div class="btn-row pi__actions">
+      {
+        variant === 'team' ? (
+          <button
+            type="button"
+            class="btn"
+            commandfor={dialogId}
+            command="show-modal"
+            aria-haspopup="dialog"
+            data-person-open={person.id}
+          >
+            View profile
+          </button>
+        ) : (
+          <Button href={personHref(person)} icon="arrow-right">
+            View profile
+          </Button>
+        )
+      }
+      <ScholarLink href={googleScholar} context={name} pendingLabel="Google Scholar profile to be added" />
+      {
+        profileUrl && (
+          <Button href={profileUrl} variant="ghost" size="small">
+            Institutional profile
+          </Button>
+        )
+      }
+    </div>
+  </div>
+</article>
+
+<style>
+  .pi {
+    display: grid;
+    gap: var(--space-l);
+    align-items: start;
+  }
+
+  .pi--team {
+    padding: var(--space-m);
+    border: var(--border-thin);
+    border-left: 4px solid var(--color-navy);
+    background: var(--color-background);
+  }
+
+  .pi__portrait {
+    width: min(100%, 17rem);
+  }
+
+  .pi__portrait-note {
+    margin-top: var(--space-2xs);
+    font-size: var(--step--2);
+  }
+
+  .pi__body {
+    display: grid;
+    justify-items: start;
+    gap: var(--space-xs);
+  }
+
+  .pi__name {
+    font-size: var(--step-5);
+    font-weight: 500;
+  }
+
+  .pi__role {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 0.5rem;
+    font-family: var(--font-display);
+    font-size: var(--step-0);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-cfal-strong);
+  }
+
+  .pi__title {
+    color: var(--color-muted);
+  }
+
+  .pi__description {
+    max-width: 60ch;
+    font-size: var(--step-1);
+    line-height: 1.55;
+  }
+
+  .pi__interests {
+    width: 100%;
+    max-width: 40rem;
+    margin-top: var(--space-2xs);
+  }
+
+  .pi__subhead {
+    margin-bottom: var(--space-2xs);
+    padding-bottom: var(--space-3xs);
+    border-bottom: var(--border-thin);
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+  }
+
+  .pi__interest-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2xs);
+    list-style: none;
+  }
+
+  .pi__interest-list li {
+    padding: 0.2em 0.65em;
+    border: var(--border-thin);
+    background: var(--color-surface);
+    font-size: var(--step--1);
+  }
+
+  .pi__actions {
+    align-items: center;
+    margin-top: var(--space-s);
+  }
+
+  @media (min-width: 48em) {
+    .pi {
+      grid-template-columns: minmax(12rem, 17rem) minmax(0, 1fr);
+      gap: var(--space-xl);
+    }
+
+    .pi--team {
+      padding: var(--space-xl);
+    }
+
+    .pi__portrait {
+      width: 100%;
+    }
+  }
+</style>

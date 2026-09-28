@@ -1,0 +1,43 @@
+---
+/**
+ * Marks sample content that must be replaced before launch. Rendered wherever
+ * an entry has `placeholder: true`, so removing the flag removes the badge.
+ */
+interface Props {
+  label?: string;
+  class?: string;
+}
+
+const { label = 'Demo content — replace', class: className } = Astro.props;
+---
+
+<span class:list={['demo-badge', className]}>{label}</span>
+
+<style>
+  .demo-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    width: fit-content;
+    padding: 0.15em 0.55em;
+    border: 1px dashed currentColor;
+    border-radius: var(--radius-s);
+    background: var(--color-placeholder-bg);
+    color: var(--color-placeholder);
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    line-height: 1.5;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .demo-badge::before {
+    content: '';
+    width: 0.5em;
+    height: 0.5em;
+    background: var(--color-gold);
+    border-radius: 50%;
+  }
+</style>

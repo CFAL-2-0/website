@@ -1,0 +1,112 @@
+---
+/**
+ * Metadata sidebar (definition list). Rows without a value are omitted, so
+ * sparse frontmatter never leaves empty labels behind.
+ */
+import { isExternal } from '../../lib/url';
+
+interface Item {
+  label: string;
+  href?: string;
+}
+
+interface Row {
+  label: string;
+  value?: string;
+  items?: Item[];
+}
+
+interface Props {
+  title?: string;
+  rows: Row[];
+}
+
+const { title = 'Details', rows } = Astro.props;
+const visible = rows.filter((row) => row.value || row.items?.length);
+---
+
+{
+  visible.length > 0 && (
+    <section class="detail-list" aria-label={title}>
+      <h2 class="detail-list__title">{title}</h2>
+      <dl>
+        {visible.map((row) => (
+          <div class="detail-list__row">
+            <dt>{row.label}</dt>
+            {row.value && <dd>{row.value}</dd>}
+            {row.items?.length ? (
+              <dd>
+                <ul>
+                  {row.items.map((item) => (
+                    <li>
+                      {item.href ? (
+                        <a
+                          href={item.href}
+                          target={isExternal(item.href) ? '_blank' : undefined}
+                          rel={isExternal(item.href) ? 'noopener noreferrer' : undefined}
+                        >
+                          {item.label}
+                          {isExternal(item.href) && <span class="visually-hidden"> (opens in a new tab)</span>}
+                        </a>
+                      ) : (
+                        item.label
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </dd>
+            ) : null}
+          </div>
+        ))}
+      </dl>
+    </section>
+  )
+}
+
+<style>
+  .detail-list {
+    padding: var(--space-m);
+    border-top: 3px solid var(--color-navy);
+    background: var(--color-surface);
+  }
+
+  .detail-list__title {
+    margin-bottom: var(--space-2xs);
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+  }
+
+  dl {
+    display: grid;
+    margin: 0;
+  }
+
+  .detail-list__row {
+    display: grid;
+    gap: 0.15rem;
+    padding-block: var(--space-xs);
+    border-top: var(--border-thin);
+  }
+
+  dt {
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  dd {
+    margin: 0;
+    font-size: var(--step--1);
+  }
+
+  ul {
+    display: grid;
+    gap: 0.2rem;
+    list-style: none;
+  }
+</style>

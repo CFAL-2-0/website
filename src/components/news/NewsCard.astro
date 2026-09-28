@@ -1,0 +1,109 @@
+---
+/** News teaser card: image, date, category, title, excerpt. */
+import Media from '../ui/Media.astro';
+import Icon from '../ui/Icon.astro';
+import DemoBadge from '../ui/DemoBadge.astro';
+import { newsHref, type NewsPost } from '../../lib/content';
+import { formatDate, isoDate } from '../../lib/format';
+
+interface Props {
+  post: NewsPost;
+  headingLevel?: 'h2' | 'h3';
+}
+
+const { post, headingLevel: Heading = 'h3' } = Astro.props;
+const { title, date, excerpt, image, imageAlt, category, placeholder } = post.data;
+---
+
+<article class="news-card card-hover">
+  <Media
+    src={image}
+    alt={imageAlt}
+    aspect="16 / 9"
+    sizes="(min-width: 64em) 33vw, (min-width: 40em) 50vw, 100vw"
+    widths={[400, 640, 960]}
+  />
+  <div class="news-card__body">
+    <p class="news-card__meta">
+      <time datetime={isoDate(date)}>{formatDate(date)}</time>
+      {category && <span class="news-card__category">{category}</span>}
+    </p>
+    <Heading class="news-card__title">
+      <a class="stretched-link" href={newsHref(post)}>{title}</a>
+    </Heading>
+    <p class="news-card__excerpt">{excerpt}</p>
+    {placeholder && <DemoBadge />}
+    <span class="arrow-link news-card__more" aria-hidden="true">
+      Read more <Icon name="arrow-right" />
+    </span>
+  </div>
+</article>
+
+<style>
+  .news-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--color-background);
+    border: var(--border-thin);
+    transition: box-shadow var(--duration-base) var(--ease-out);
+  }
+
+  .news-card:hover {
+    box-shadow: var(--shadow-m);
+  }
+
+  .news-card__body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2xs);
+    padding: var(--space-m);
+  }
+
+  .news-card__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.75rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.03em;
+    color: var(--color-muted);
+  }
+
+  .news-card__category {
+    color: var(--color-cfal-strong);
+    text-transform: uppercase;
+  }
+
+  .news-card__category::before {
+    content: '/';
+    margin-right: 0.75rem;
+    color: var(--color-border-strong);
+  }
+
+  .news-card__title {
+    font-size: var(--step-2);
+  }
+
+  .news-card__title a {
+    color: var(--color-navy);
+    text-decoration: none;
+  }
+
+  .news-card:hover .news-card__title a {
+    color: var(--color-blue);
+  }
+
+  .news-card__excerpt {
+    color: var(--color-muted);
+    font-size: var(--step--1);
+    line-height: 1.6;
+  }
+
+  .news-card__more {
+    margin-top: auto;
+    padding-top: var(--space-xs);
+  }
+</style>

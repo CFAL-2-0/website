@@ -1,0 +1,27 @@
+{
+  "name": "cfal-website",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Website for the Computational Fluids and Aerodynamics Laboratory (CFAL), Department of Aerospace Engineering, Embry-Riddle Aeronautical University.",
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "^3.7.4",
+    "@fontsource-variable/oswald": "^5.3.0",
+    "@fontsource-variable/roboto": "^5.3.0",
+    "astro": "^7.3.5"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "typescript": "^6.0.3"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}

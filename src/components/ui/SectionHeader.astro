@@ -1,0 +1,68 @@
+---
+/**
+ * Consistent section heading: eyebrow label, title, optional intro and an
+ * optional "view all" link aligned to the right on wide screens.
+ */
+import Icon from './Icon.astro';
+import { url } from '../../lib/url';
+
+interface Props {
+  eyebrow?: string;
+  title: string;
+  id?: string;
+  as?: 'h2' | 'h3';
+  link?: { href: string; label: string };
+  class?: string;
+}
+
+const { eyebrow, title, id, as: Heading = 'h2', link, class: className } = Astro.props;
+---
+
+<header class:list={['section-header', className]}>
+  <div class="section-header__text">
+    {eyebrow && <p class="eyebrow">{eyebrow}</p>}
+    <Heading id={id} class="section-header__title">{title}</Heading>
+    {
+      Astro.slots.has('default') && (
+        <div class="section-header__intro">
+          <slot />
+        </div>
+      )
+    }
+  </div>
+  {
+    link && (
+      <a class="arrow-link section-header__link" href={url(link.href)}>
+        {link.label}
+        <Icon name="arrow-right" />
+      </a>
+    )
+  }
+</header>
+
+<style>
+  .section-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--space-s) var(--space-l);
+    margin-bottom: var(--space-l);
+  }
+
+  .section-header__text {
+    display: grid;
+    gap: var(--space-2xs);
+    max-width: 48rem;
+  }
+
+  .section-header__intro {
+    color: var(--color-muted);
+    font-size: var(--step-1);
+    line-height: 1.55;
+  }
+
+  .section-header__link {
+    flex: none;
+  }
+</style>

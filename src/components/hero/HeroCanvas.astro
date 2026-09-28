@@ -1,0 +1,59 @@
+---
+/**
+ * Canvas/WebGL hero layer. Shows an optional poster image and mounts the
+ * visualization in src/scripts/hero-visualization.ts on top of it. The
+ * script is only bundled on pages that actually render this component.
+ */
+import Media from '../ui/Media.astro';
+
+interface Props {
+  poster?: string;
+  position?: string;
+}
+
+const { poster, position } = Astro.props;
+---
+
+<div class="hero-canvas" data-hero-canvas>
+  {
+    poster && (
+      <Media
+        class="hero-canvas__poster"
+        src={poster}
+        aspect="auto"
+        sizes="100vw"
+        widths={[768, 1280, 1920, 2560]}
+        priority
+        position={position}
+      />
+    )
+  }
+  <canvas class="hero-canvas__canvas" aria-hidden="true"></canvas>
+</div>
+
+<style>
+  .hero-canvas,
+  .hero-canvas__canvas,
+  .hero-canvas :global(.hero-canvas__poster),
+  .hero-canvas :global(.media__img) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .hero-canvas__canvas {
+    z-index: 1;
+  }
+</style>
+
+<script>
+  import { mountHeroVisualization } from '../../scripts/hero-visualization';
+
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  document.querySelectorAll<HTMLElement>('[data-hero-canvas]').forEach((root) => {
+    const canvas = root.querySelector('canvas');
+    if (canvas) mountHeroVisualization(canvas, { reducedMotion: reduceMotion.matches });
+  });
+</script>

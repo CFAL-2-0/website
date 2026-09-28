@@ -1,0 +1,100 @@
+# Publications — DEMO RECORDS, REPLACE
+# ------------------------------------
+# The records below are fictitious placeholders that exist only to demonstrate
+# the bibliography layout. They are not attributed to any real author.
+# Delete them and add real entries. The list is sorted newest-first
+# automatically (year, then month) and grouped by year.
+#
+# Required
+#   id            unique key — the BibTeX citation key is a good choice
+#   title
+#   authors       list, in author order, formatted as they should appear
+#   year
+# Optional
+#   month         1–12, refines sort order within a year
+#   venue         journal, conference or publisher
+#   type          journal | conference | thesis | report | book | preprint | other
+#   doi           bare DOI, e.g. 10.2514/1.J000000 (rendered as https://doi.org/…)
+#   url           publisher / external page
+#   pdf           link to an open-access PDF
+#   googleScholar direct Scholar link; if omitted a Scholar title search is offered
+#   bibtex        full BibTeX entry (multi-line, use "|")
+#   featured      true = eligible for the homepage "Selected Publications"
+#   projects      list of project slugs (links the publication to project pages)
+#   researchAreas list of research-area ids (enables area filtering)
+#   placeholder   true shows a "Demo content" badge
+
+- id: placeholder2026a
+  title: Placeholder Journal Article Title Demonstrating the Bibliography Layout
+  authors: [Author A., Author B., Author C.]
+  year: 2026
+  month: 5
+  venue: Journal Name Placeholder
+  type: journal
+  # 10.5555 is a DOI prefix reserved for examples; this link intentionally does not resolve.
+  doi: 10.5555/cfal-demo-0001
+  featured: true
+  projects: [placeholder-rotorcraft-aerodynamics]
+  researchAreas: [rotorcraft-aerodynamics, computational-fluid-dynamics]
+  placeholder: true
+  bibtex: |
+    @article{placeholder2026a,
+      title   = {Placeholder Journal Article Title Demonstrating the Bibliography Layout},
+      author  = {A., Author and B., Author and C., Author},
+      journal = {Journal Name Placeholder},
+      year    = {2026},
+      doi     = {10.5555/cfal-demo-0001},
+      note    = {DEMO CONTENT -- REPLACE}
+    }
+
+- id: placeholder2025a
+  title: Placeholder Conference Paper Title for Interface Demonstration
+  authors: [Author D., Author E.]
+  year: 2025
+  month: 6
+  venue: Conference Proceedings Placeholder
+  type: conference
+  featured: true
+  projects: [placeholder-propulsion-plume-flows]
+  researchAreas: [propulsion-plume-flows]
+  placeholder: true
+  bibtex: |
+    @inproceedings{placeholder2025a,
+      title     = {Placeholder Conference Paper Title for Interface Demonstration},
+      author    = {D., Author and E., Author},
+      booktitle = {Conference Proceedings Placeholder},
+      year      = {2025},
+      note      = {DEMO CONTENT -- REPLACE}
+    }
+
+- id: placeholder2025b
+  title: Placeholder Article on a Multiphysics Topic (Sample Record)
+  authors: [Author F., Author G., Author H., Author I.]
+  year: 2025
+  month: 2
+  venue: Journal Name Placeholder
+  type: journal
+  doi: 10.5555/cfal-demo-0002
+  featured: true
+  projects: [placeholder-fluid-structure-interaction]
+  researchAreas: [multiphysics]
+  placeholder: true
+  bibtex: |
+    @article{placeholder2025b,
+      title   = {Placeholder Article on a Multiphysics Topic (Sample Record)},
+      author  = {F., Author and G., Author and H., Author and I., Author},
+      journal = {Journal Name Placeholder},
+      year    = {2025},
+      doi     = {10.5555/cfal-demo-0002},
+      note    = {DEMO CONTENT -- REPLACE}
+    }
+
+- id: placeholder2024a
+  title: Placeholder Thesis Title (Sample Record Without DOI)
+  authors: [Author J.]
+  year: 2024
+  venue: University Placeholder
+  type: thesis
+  projects: [placeholder-aeroacoustics]
+  researchAreas: [aeroacoustics]
+  placeholder: true

@@ -1,0 +1,64 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHeader from '../../components/layout/PageHeader.astro';
+import FilterBar from '../../components/ui/FilterBar.astro';
+import ProjectCard from '../../components/projects/ProjectCard.astro';
+import { getProjects, getResearchAreas } from '../../lib/content';
+import { OTHER_AREA, PROJECT_STATUSES, STATUS_LABELS } from '../../lib/taxonomy';
+
+const areas = await getResearchAreas();
+const projects = await getProjects();
+
+const areaOf = (areaId?: string) => areaId ?? OTHER_AREA.id;
+const areaOptions = [
+  ...areas.map((area) => ({ value: area.id, label: area.data.shortTitle ?? area.data.title })),
+  { value: OTHER_AREA.id, label: OTHER_AREA.title },
+]
+  .map((option) => ({
+    ...option,
+    count: projects.filter((project) => areaOf(project.data.researchArea?.id) === option.value).length,
+  }))
+  .filter((option) => option.count > 0);
+
+const statusOptions = PROJECT_STATUSES.map((status) => ({
+  value: status,
+  label: STATUS_LABELS[status],
+  count: projects.filter((project) => project.data.status === status).length,
+})).filter((option) => option.count > 0);
+---
+
+<BaseLayout
+  title="Projects"
+  description="Current and completed research projects of the Computational Fluids and Aerodynamics Laboratory (CFAL)."
+>
+  <PageHeader
+    eyebrow="Projects"
+    title="Research projects"
+    lead="Current and completed projects, organised by research area. Each project has its own page with methods, results, people and related publications."
+  />
+
+  <section class="section section--tight" aria-label="Project list">
+    <div class="container" id="project-results">
+      <FilterBar
+        target="project-results"
+        noun={{ singular: 'project', plural: 'projects' }}
+        groups={[
+          { key: 'area', label: 'Research area', options: areaOptions },
+          { key: 'status', label: 'Status', options: statusOptions },
+        ]}
+      />
+      <div class="card-grid">
+        {projects.map((project) => <ProjectCard project={project} areas={areas} headingLevel="h2" />)}
+      </div>
+      <p class="projects-empty" data-filter-empty hidden>No projects match the selected filters.</p>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .projects-empty {
+    padding: var(--space-xl) 0;
+    color: var(--color-muted);
+    text-align: center;
+  }
+</style>

@@ -1,0 +1,122 @@
+---
+/**
+ * Hero media layer. Fills its (absolutely positioned) parent and renders one
+ * of: optimised image, looping background video, or a canvas visualization.
+ * Configure it through `homeHero` in src/site.config.ts.
+ */
+import Media from '../ui/Media.astro';
+import HeroCanvas from './HeroCanvas.astro';
+import type { HeroMediaConfig } from '../../lib/hero';
+import { url } from '../../lib/url';
+
+type Props = HeroMediaConfig & { priority?: boolean };
+
+const props = Astro.props;
+const heroSizes = '100vw';
+const heroWidths = [768, 1280, 1920, 2560];
+---
+
+{
+  props.type === 'image' && (
+    <Media
+      class="hero-media"
+      src={props.src}
+      alt={props.alt ?? ''}
+      aspect="auto"
+      sizes={heroSizes}
+      widths={heroWidths}
+      priority={props.priority}
+      position={props.position}
+    />
+  )
+}
+
+{
+  props.type === 'video' && (
+    <div class="hero-media hero-media--video" data-hero-video>
+      {props.poster && (
+        <Media
+          class="hero-media__poster"
+          src={props.poster}
+          aspect="auto"
+          sizes={heroSizes}
+          widths={heroWidths}
+          priority={props.priority}
+          position={props.position}
+        />
+      )}
+      <video
+        class="hero-media__video"
+        style={props.position ? `object-position: ${props.position}` : undefined}
+        autoplay
+        muted
+        loop
+        playsinline
+        preload="metadata"
+        aria-hidden="true"
+        tabindex="-1"
+      >
+        {props.sources.map((source) => (
+          <source src={url(source.src)} type={source.type} />
+        ))}
+      </video>
+    </div>
+  )
+}
+
+{props.type === 'canvas' && <HeroCanvas poster={props.poster} position={props.position} />}
+
+<style>
+  .hero-media,
+  .hero-media :global(.media__img),
+  .hero-media__video,
+  :global(.hero-media__poster) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .hero-media__video {
+    z-index: 1;
+    object-fit: cover;
+  }
+
+  :global(.hero-media__poster) {
+    z-index: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-media__video {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  // Background video: honour reduced-motion and expose a pause control
+  // (WCAG 2.2.2). Without JS the video simply autoplays muted.
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  document.querySelectorAll<HTMLElement>('[data-hero-video]').forEach((wrapper) => {
+    const video = wrapper.querySelector('video');
+    const toggle = wrapper.closest('[data-hero]')?.querySelector<HTMLButtonElement>('[data-hero-video-toggle]');
+    if (!video) return;
+
+    const label = toggle?.querySelector('[data-hero-video-label]');
+    const setPaused = (paused: boolean) => {
+      if (paused) video.pause();
+      else void video.play().catch(() => undefined);
+      if (toggle) toggle.dataset.state = paused ? 'paused' : 'playing';
+      if (label) label.textContent = `${paused ? 'Play' : 'Pause'} background video`;
+    };
+
+    if (reduceMotion.matches) setPaused(true);
+    reduceMotion.addEventListener('change', () => setPaused(reduceMotion.matches));
+
+    if (toggle && !reduceMotion.matches) {
+      toggle.hidden = false;
+      toggle.addEventListener('click', () => setPaused(!video.paused));
+    }
+  });
+</script>

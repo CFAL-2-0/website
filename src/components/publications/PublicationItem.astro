@@ -1,0 +1,274 @@
+---
+/**
+ * Bibliography entry. BibTeX uses <details> so it expands without
+ * JavaScript; the "Copy BibTeX" button is revealed only when the Clipboard
+ * API is available and announces success through a live region.
+ */
+import Icon from '../ui/Icon.astro';
+import DemoBadge from '../ui/DemoBadge.astro';
+import { doiUrl, scholarUrl, type Publication } from '../../lib/content';
+import { PUBLICATION_TYPE_LABELS } from '../../lib/taxonomy';
+
+interface Props {
+  publication: Publication;
+  headingLevel?: 'h3' | 'h4';
+  /** Compact variant omits the type label (used on the homepage). */
+  compact?: boolean;
+}
+
+const { publication, headingLevel: Heading = 'h3', compact = false } = Astro.props;
+const { title, authors, venue, year, type, doi, url: link, pdf, bibtex, researchAreas, placeholder } =
+  publication.data;
+const bibId = `bibtex-${publication.id}`;
+---
+
+<article
+  class:list={['pub', compact && 'pub--compact']}
+  data-filter-item
+  data-area={researchAreas.map((area) => area.id).join(' ')}
+>
+  <div class="pub__head">
+    {!compact && <p class="pub__type label">{PUBLICATION_TYPE_LABELS[type]}</p>}
+    {placeholder && <DemoBadge />}
+  </div>
+  <Heading class="pub__title">
+    {
+      link ? (
+        <a href={link} target="_blank" rel="noopener noreferrer">
+          {title}
+          <span class="visually-hidden"> (opens in a new tab)</span>
+        </a>
+      ) : (
+        title
+      )
+    }
+  </Heading>
+  <p class="pub__authors">{authors.join(', ')}</p>
+  <p class="pub__venue">
+    {venue && <cite>{venue}</cite>}
+    {venue && ', '}
+    <span>{year}</span>
+  </p>
+
+  <div class="pub__actions">
+    {
+      doi && (
+        <a class="btn btn--ghost btn--small pub__action" href={doiUrl(doi)} target="_blank" rel="noopener noreferrer">
+          <Icon name="link" />
+          DOI<span class="visually-hidden">: {doi} (opens in a new tab)</span>
+        </a>
+      )
+    }
+    {
+      pdf && (
+        <a class="btn btn--ghost btn--small pub__action" href={pdf} target="_blank" rel="noopener noreferrer">
+          <Icon name="document" />
+          PDF<span class="visually-hidden"> (opens in a new tab)</span>
+        </a>
+      )
+    }
+    <a class="btn btn--ghost btn--small pub__action" href={scholarUrl(publication)} target="_blank" rel="noopener noreferrer">
+      <Icon name="scholar" />
+      Google Scholar<span class="visually-hidden"> — {title} (opens in a new tab)</span>
+    </a>
+    {
+      bibtex && (
+        <details class="pub__bib" data-bibtex>
+          <summary class="btn btn--ghost btn--small pub__action">
+            <Icon name="braces" />
+            BibTeX
+            <Icon name="chevron" class="pub__chevron" />
+          </summary>
+          <div class="pub__bib-panel">
+            <pre id={bibId} class="pub__bib-code" tabindex="0" aria-label={`BibTeX for ${title}`}><code>{bibtex.trim()}</code></pre>
+            <div class="pub__bib-tools">
+              <button type="button" class="btn btn--small" data-copy-target={bibId} hidden>
+                <Icon name="copy" class="pub__copy-icon" />
+                <Icon name="check" class="pub__copied-icon" />
+                <span data-copy-label>Copy BibTeX</span>
+              </button>
+              <span class="pub__copy-status" role="status" aria-live="polite" data-copy-status></span>
+            </div>
+          </div>
+        </details>
+      )
+    }
+  </div>
+</article>
+
+<script>
+  document.querySelectorAll<HTMLButtonElement>('[data-copy-target]').forEach((button) => {
+    if (!navigator.clipboard) return;
+    const source = document.getElementById(button.dataset.copyTarget ?? '');
+    const label = button.querySelector<HTMLElement>('[data-copy-label]');
+    const status = button.parentElement?.querySelector<HTMLElement>('[data-copy-status]');
+    if (!source || !label || !status) return;
+
+    let timer: number | undefined;
+    button.hidden = false;
+    button.addEventListener('click', async () => {
+      window.clearTimeout(timer);
+      try {
+        await navigator.clipboard.writeText(source.textContent ?? '');
+        button.dataset.copied = '';
+        label.textContent = 'Copied';
+        status.textContent = 'BibTeX copied to clipboard.';
+      } catch {
+        const range = document.createRange();
+        range.selectNodeContents(source);
+        window.getSelection()?.removeAllRanges();
+        window.getSelection()?.addRange(range);
+        status.textContent = 'Copy failed — the BibTeX is selected; press Ctrl+C (⌘C on Mac) to copy.';
+      }
+      timer = window.setTimeout(() => {
+        delete button.dataset.copied;
+        label.textContent = 'Copy BibTeX';
+        status.textContent = '';
+      }, 2500);
+    });
+  });
+</script>
+
+<style>
+  .pub {
+    display: grid;
+    gap: 0.35rem;
+    padding-block: var(--space-m);
+    border-bottom: var(--border-thin);
+  }
+
+  .pub__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2xs) var(--space-s);
+  }
+
+  .pub__head:empty {
+    display: none;
+  }
+
+  .pub__title {
+    font-family: var(--font-body);
+    font-size: var(--step-1);
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--color-navy);
+  }
+
+  .pub__title a {
+    color: inherit;
+    text-decoration-color: var(--color-border-strong);
+  }
+
+  .pub__title a:hover {
+    color: var(--color-blue);
+    text-decoration-color: currentColor;
+  }
+
+  .pub__authors {
+    font-size: var(--step--1);
+  }
+
+  .pub__venue {
+    font-size: var(--step--1);
+    color: var(--color-muted);
+  }
+
+  .pub__venue cite {
+    font-style: italic;
+  }
+
+  /* Floated action buttons let the BibTeX panel open full-width below the
+     whole row while its toggle stays inline with DOI / Scholar. */
+  .pub__actions {
+    margin-top: var(--space-2xs);
+  }
+
+  .pub__actions::after {
+    content: '';
+    display: block;
+    clear: both;
+  }
+
+  .pub__actions > .pub__action {
+    float: left;
+    margin: 0 var(--space-2xs) var(--space-2xs) 0;
+  }
+
+  .pub__bib > summary {
+    display: inline-flex;
+    margin-bottom: var(--space-2xs);
+    list-style: none;
+  }
+
+  .pub__bib > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .pub__bib :global(.pub__chevron) {
+    transition: transform var(--duration-fast) var(--ease-out);
+  }
+
+  .pub__bib[open] :global(.pub__chevron) {
+    transform: rotate(180deg);
+  }
+
+  .pub__bib[open] > summary {
+    --btn-bg: var(--color-surface-strong);
+    --btn-fg: var(--color-navy);
+  }
+
+  .pub__bib-panel {
+    clear: both;
+    border: var(--border-thin);
+    border-left: 3px solid var(--color-cfal);
+    background: var(--color-surface);
+  }
+
+  .pub__bib-code {
+    margin: 0;
+    padding: var(--space-s);
+    overflow-x: auto;
+    font-size: 0.8125rem;
+    line-height: 1.55;
+    white-space: pre;
+    color: var(--color-text);
+  }
+
+  .pub__bib-tools {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2xs) var(--space-s);
+    padding: 0 var(--space-s) var(--space-s);
+  }
+
+  .pub__bib-tools:has(button[hidden]):has(.pub__copy-status:empty) {
+    display: none;
+  }
+
+  .pub__bib-tools :global(.pub__copied-icon),
+  .pub__bib-tools [data-copied] :global(.pub__copy-icon) {
+    display: none;
+  }
+
+  .pub__bib-tools [data-copied] :global(.pub__copied-icon) {
+    display: block;
+  }
+
+  .pub__bib-tools [data-copied] {
+    --btn-bg: var(--color-success);
+    --btn-border: var(--color-success);
+    --btn-bg-hover: var(--color-success);
+  }
+
+  .pub__copy-status {
+    font-size: var(--step--1);
+    color: var(--color-success);
+  }
+
+  .pub--compact {
+    padding-block: var(--space-s);
+  }
+</style>

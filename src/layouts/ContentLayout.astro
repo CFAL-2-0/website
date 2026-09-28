@@ -1,0 +1,75 @@
+---
+/**
+ * Layout for long-form entries (project and news detail pages):
+ * page header (optionally with a background image), a reading column,
+ * an optional metadata sidebar and optional full-width sections after.
+ *
+ * Slots: default (main column) · "header" (extra header content) ·
+ *        "aside" (sidebar) · "after" (full-width sections)
+ */
+import BaseLayout from './BaseLayout.astro';
+import PageHeader from '../components/layout/PageHeader.astro';
+import type { Props as HeadProps } from '../components/layout/BaseHead.astro';
+import type { HeroMediaConfig } from '../lib/hero';
+
+interface Props extends HeadProps {
+  title: string;
+  eyebrow?: string;
+  lead?: string;
+  media?: HeroMediaConfig;
+  placeholder?: boolean;
+}
+
+const { title, eyebrow, lead, media, placeholder, ...head } = Astro.props;
+const hasAside = Astro.slots.has('aside');
+---
+
+<BaseLayout title={title} {...head}>
+  <PageHeader title={title} eyebrow={eyebrow} lead={lead} media={media} placeholder={placeholder}>
+    <slot name="header" />
+  </PageHeader>
+
+  <div class:list={['container', 'content-layout', hasAside && 'content-layout--with-aside']}>
+    <div class="content-layout__main">
+      <slot />
+    </div>
+    {
+      hasAside && (
+        <aside class="content-layout__aside">
+          <slot name="aside" />
+        </aside>
+      )
+    }
+  </div>
+
+  <slot name="after" />
+</BaseLayout>
+
+<style>
+  .content-layout {
+    display: grid;
+    gap: var(--space-xl);
+    padding-block: var(--space-xl) var(--space-section);
+  }
+
+  .content-layout__main {
+    min-width: 0;
+  }
+
+  @media (min-width: 60em) {
+    .content-layout--with-aside {
+      grid-template-columns: minmax(0, 1fr) 20rem;
+      gap: var(--space-2xl);
+    }
+
+    .content-layout__aside {
+      order: 2;
+    }
+  }
+
+  @media (max-width: 59.99em) {
+    .content-layout__aside {
+      order: -1;
+    }
+  }
+</style>

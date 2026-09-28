@@ -1,0 +1,297 @@
+---
+import type { GetStaticPaths, InferGetStaticPropsType } from 'astro';
+import { getEntries, getEntry, render } from 'astro:content';
+import ContentLayout from '../../layouts/ContentLayout.astro';
+import SectionHeader from '../../components/ui/SectionHeader.astro';
+import DetailList from '../../components/ui/DetailList.astro';
+import ExternalLink from '../../components/ui/ExternalLink.astro';
+import Media from '../../components/ui/Media.astro';
+import ProjectCard from '../../components/projects/ProjectCard.astro';
+import PublicationItem from '../../components/publications/PublicationItem.astro';
+import {
+  displayName,
+  getProjects,
+  getPublications,
+  getResearchAreas,
+  personHref,
+  researchAreaHref,
+} from '../../lib/content';
+import { imageUrl } from '../../lib/images';
+import { yearRange } from '../../lib/format';
+import { STATUS_LABELS } from '../../lib/taxonomy';
+import { url } from '../../lib/url';
+
+export const getStaticPaths = (async () => {
+  const projects = await getProjects();
+  return projects.map((project) => ({ params: { slug: project.id }, props: { project } }));
+}) satisfies GetStaticPaths;
+
+type Props = InferGetStaticPropsType<typeof getStaticPaths>;
+
+const { project } = Astro.props;
+const { Content } = await render(project);
+const data = project.data;
+
+const areas = await getResearchAreas();
+const area = data.researchArea ? await getEntry(data.researchArea) : undefined;
+const people = await getEntries(data.people);
+const allProjects = await getProjects();
+
+const publications = (await getPublications()).filter((publication) =>
+  publication.data.projects.some((ref) => ref.id === project.id),
+);
+
+// Explicit related projects, or others from the same research area.
+const explicitRelated = data.relatedProjects.map((ref) => ref.id);
+const related = allProjects
+  .filter((candidate) => candidate.id !== project.id)
+  .filter((candidate) =>
+    explicitRelated.length
+      ? explicitRelated.includes(candidate.id)
+      : area && candidate.data.researchArea?.id === area.id,
+  )
+  .slice(0, 3);
+
+const videos = await Promise.all(
+  data.videos.map(async (video) => ({ ...video, posterUrl: await imageUrl(video.poster) })),
+);
+const socialImage = await imageUrl(data.heroImage, { width: 1200, format: 'jpg' });
+---
+
+<ContentLayout
+  title={data.title}
+  description={data.summary}
+  image={socialImage ? new URL(socialImage, Astro.site).href : undefined}
+  imageAlt={data.heroImageAlt || undefined}
+  eyebrow={area ? area.data.title : 'Project'}
+  lead={data.summary}
+  placeholder={data.placeholder}
+  media={data.heroImage ? { type: 'image', src: data.heroImage, alt: '' } : undefined}
+>
+  <p slot="header" class="project-header-meta">
+    <span class:list={['chip', data.status === 'current' && 'chip--current']}>{STATUS_LABELS[data.status]}</span>
+    {yearRange(data.startYear, data.endYear) && <span class="meta">{yearRange(data.startYear, data.endYear)}</span>}
+  </p>
+
+  <div class="prose">
+    <Content />
+  </div>
+
+  {
+    data.gallery.length > 0 && (
+      <section class="project-block" aria-labelledby="gallery-title">
+        <h2 id="gallery-title" class="project-block__title">Figures</h2>
+        <div class="gallery">
+          {data.gallery.map((item) => (
+            <figure class="gallery__item">
+              <Media src={item.src} alt={item.alt} aspect="16 / 10" sizes="(min-width: 60em) 30rem, 100vw" widths={[480, 800, 1200]} />
+              {item.caption && <figcaption>{item.caption}</figcaption>}
+            </figure>
+          ))}
+        </div>
+      </section>
+    )
+  }
+
+  {
+    videos.length > 0 && (
+      <section class="project-block" aria-labelledby="videos-title">
+        <h2 id="videos-title" class="project-block__title">Videos</h2>
+        <div class="videos">
+          {videos.map((video) => (
+            <figure class="video">
+              {video.embedUrl ? (
+                <iframe
+                  src={video.embedUrl}
+                  title={video.title}
+                  loading="lazy"
+                  allow="fullscreen; picture-in-picture"
+                  referrerpolicy="strict-origin-when-cross-origin"
+                />
+              ) : (
+                video.src && (
+                  <video controls preload="metadata" poster={video.posterUrl} aria-label={video.title}>
+                    <source src={url(video.src)} type={video.type} />
+                  </video>
+                )
+              )}
+              <figcaption>
+                <strong>{video.title}</strong>
+                {video.caption && <span> — {video.caption}</span>}
+              </figcaption>
+            </figure>
+          ))}
+        </div>
+      </section>
+    )
+  }
+
+  {
+    data.collaborators.length > 0 && (
+      <section class="project-block" aria-labelledby="collaborators-title">
+        <h2 id="collaborators-title" class="project-block__title">Collaborators</h2>
+        <ul class="plain-list">
+          {data.collaborators.map((collaborator) => (
+            <li>
+              {collaborator.url ? (
+                <ExternalLink href={collaborator.url}>{collaborator.name}</ExternalLink>
+              ) : (
+                <strong>{collaborator.name}</strong>
+              )}
+              {collaborator.affiliation && <span class="plain-list__meta">{collaborator.affiliation}</span>}
+            </li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
+
+  {
+    data.software.length > 0 && (
+      <section class="project-block" aria-labelledby="software-title">
+        <h2 id="software-title" class="project-block__title">Software</h2>
+        <ul class="plain-list">
+          {data.software.map((tool) => (
+            <li>
+              {tool.url ? <ExternalLink href={tool.url}>{tool.name}</ExternalLink> : <strong>{tool.name}</strong>}
+              {tool.description && <span class="plain-list__meta">{tool.description}</span>}
+            </li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
+
+  <DetailList
+    slot="aside"
+    title="Project details"
+    rows={[
+      { label: 'Status', value: STATUS_LABELS[data.status] },
+      {
+        label: 'Research area',
+        items: area ? [{ label: area.data.title, href: researchAreaHref(area) }] : [],
+      },
+      { label: 'Years', value: yearRange(data.startYear, data.endYear) },
+      {
+        label: 'People',
+        items: people.map((person) => ({ label: displayName(person), href: personHref(person) })),
+      },
+      {
+        label: 'Sponsors',
+        items: data.sponsors.map((sponsor) => ({ label: sponsor.name, href: sponsor.url })),
+      },
+      { label: 'Tags', value: data.tags.join(', ') },
+    ]}
+  />
+
+  <Fragment slot="after">
+    {
+      publications.length > 0 && (
+        <section class="section section--surface" aria-labelledby="project-pubs-title">
+          <div class="container">
+            <SectionHeader eyebrow="Publications" title="Related publications" id="project-pubs-title" />
+            <div class="related-pubs">
+              {publications.map((publication) => (
+                <PublicationItem publication={publication} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )
+    }
+    {
+      related.length > 0 && (
+        <section class="section" aria-labelledby="related-title">
+          <div class="container">
+            <SectionHeader
+              eyebrow="Projects"
+              title="Related projects"
+              id="related-title"
+              link={{ href: '/projects/', label: 'All projects' }}
+            />
+            <div class="card-grid">
+              {related.map((item) => (
+                <ProjectCard project={item} areas={areas} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )
+    }
+  </Fragment>
+</ContentLayout>
+
+<style>
+  .project-header-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-xs);
+  }
+
+  .project-header-meta .meta {
+    color: var(--color-on-dark-muted);
+  }
+
+  .project-block {
+    max-width: 70ch;
+    margin-top: var(--space-xl);
+  }
+
+  .project-block__title {
+    margin-bottom: var(--space-s);
+    padding-top: var(--space-s);
+    border-top: var(--border-thin);
+    font-size: var(--step-3);
+  }
+
+  .gallery {
+    display: grid;
+    gap: var(--space-m);
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
+  }
+
+  .gallery__item,
+  .video {
+    margin: 0;
+  }
+
+  figcaption {
+    margin-top: var(--space-2xs);
+    font-size: var(--step--1);
+    color: var(--color-muted);
+  }
+
+  .videos {
+    display: grid;
+    gap: var(--space-l);
+  }
+
+  .video video,
+  .video iframe {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    height: auto;
+    border: 0;
+    background: var(--color-navy-deep);
+  }
+
+  .plain-list {
+    display: grid;
+    gap: var(--space-xs);
+    list-style: none;
+  }
+
+  .plain-list li {
+    display: grid;
+  }
+
+  .plain-list__meta {
+    font-size: var(--step--1);
+    color: var(--color-muted);
+  }
+
+  .related-pubs {
+    border-top: 2px solid var(--color-navy);
+  }
+</style>

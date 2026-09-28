@@ -1,0 +1,215 @@
+---
+/**
+ * Lightweight client-side filtering (no framework, no global state).
+ *
+ * Point `target` at the id of a container holding items marked
+ * `data-filter-item` with one data attribute per filter key, e.g.
+ * `data-area="rotorcraft" data-status="current"` (space-separated for
+ * multiple values). Optional `data-filter-section` wrappers hide when empty,
+ * and a `data-filter-empty` element shows when nothing matches.
+ *
+ * Without JavaScript the bar stays hidden and every item is visible.
+ * Selections are mirrored to the query string (?area=…&status=…) so filtered
+ * views can be linked to.
+ */
+interface Option {
+  value: string;
+  label: string;
+  count?: number;
+}
+
+interface Props {
+  target: string;
+  groups: { key: string; label: string; options: Option[] }[];
+  noun: { singular: string; plural: string };
+}
+
+const { target, groups, noun } = Astro.props;
+---
+
+<div
+  class="filter-bar"
+  data-filter-controls={target}
+  data-singular={noun.singular}
+  data-plural={noun.plural}
+  hidden
+>
+  {
+    groups.map((group) => (
+      <div class="filter-group" role="group" aria-labelledby={`${target}-${group.key}-label`}>
+        <span id={`${target}-${group.key}-label`} class="filter-group__label">
+          {group.label}
+        </span>
+        <div class="filter-group__options">
+          <button type="button" class="filter-chip" data-filter-key={group.key} data-filter-value="all" aria-pressed="true">
+            All
+          </button>
+          {group.options.map((option) => (
+            <button
+              type="button"
+              class="filter-chip"
+              data-filter-key={group.key}
+              data-filter-value={option.value}
+              aria-pressed="false"
+            >
+              {option.label}
+              {option.count !== undefined && <span class="filter-chip__count">{option.count}</span>}
+            </button>
+          ))}
+        </div>
+      </div>
+    ))
+  }
+  <p class="filter-bar__status" role="status" aria-live="polite" data-filter-status></p>
+</div>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-filter-controls]').forEach((bar) => {
+    const root = document.getElementById(bar.dataset.filterControls ?? '');
+    if (!root) return;
+
+    const items = [...root.querySelectorAll<HTMLElement>('[data-filter-item]')];
+    const sections = [...root.querySelectorAll<HTMLElement>('[data-filter-section]')];
+    const empty = root.querySelector<HTMLElement>('[data-filter-empty]');
+    const status = bar.querySelector<HTMLElement>('[data-filter-status]');
+    const buttons = [...bar.querySelectorAll<HTMLButtonElement>('[data-filter-key]')];
+    const keys = [...new Set(buttons.map((button) => button.dataset.filterKey ?? ''))];
+    const state = new Map(keys.map((key) => [key, 'all']));
+
+    const params = new URLSearchParams(window.location.search);
+    for (const key of keys) {
+      const value = params.get(key);
+      const valid = buttons.some((b) => b.dataset.filterKey === key && b.dataset.filterValue === value);
+      if (value && valid) state.set(key, value);
+    }
+
+    const matches = (item: HTMLElement) =>
+      keys.every((key) => {
+        const wanted = state.get(key);
+        return wanted === 'all' || (item.dataset[key] ?? '').split(' ').includes(wanted ?? '');
+      });
+
+    const apply = () => {
+      let visible = 0;
+      for (const item of items) {
+        const show = matches(item);
+        item.hidden = !show;
+        if (show) visible += 1;
+      }
+      for (const section of sections) {
+        section.hidden = !section.querySelector('[data-filter-item]:not([hidden])');
+      }
+      if (empty) empty.hidden = visible > 0;
+      for (const button of buttons) {
+        const pressed = state.get(button.dataset.filterKey ?? '') === button.dataset.filterValue;
+        button.setAttribute('aria-pressed', String(pressed));
+      }
+      if (status) {
+        const noun = items.length === 1 ? bar.dataset.singular : bar.dataset.plural;
+        status.textContent = `Showing ${visible} of ${items.length} ${noun}`;
+      }
+      const url = new URL(window.location.href);
+      for (const key of keys) {
+        const value = state.get(key);
+        if (!value || value === 'all') url.searchParams.delete(key);
+        else url.searchParams.set(key, value);
+      }
+      window.history.replaceState(window.history.state, '', url);
+    };
+
+    for (const button of buttons) {
+      button.addEventListener('click', () => {
+        state.set(button.dataset.filterKey ?? '', button.dataset.filterValue ?? 'all');
+        apply();
+      });
+    }
+
+    bar.hidden = false;
+    apply();
+  });
+</script>
+
+<style>
+  .filter-bar {
+    display: grid;
+    gap: var(--space-s);
+    margin-bottom: var(--space-l);
+    padding: var(--space-s) 0 var(--space-m);
+    border-bottom: var(--border-thin);
+  }
+
+  .filter-group {
+    display: grid;
+    gap: var(--space-2xs);
+  }
+
+  .filter-group__label {
+    font-family: var(--font-display);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .filter-group__options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2xs);
+  }
+
+  .filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    min-height: 2.5rem;
+    padding: 0.35em 0.9em;
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-s);
+    background: var(--color-background);
+    color: var(--color-text);
+    font-size: var(--step--1);
+    transition:
+      background-color var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out);
+  }
+
+  .filter-chip:hover {
+    border-color: var(--color-navy);
+  }
+
+  .filter-chip[aria-pressed='true'] {
+    border-color: var(--color-navy);
+    background: var(--color-navy);
+    color: var(--color-on-dark);
+  }
+
+  .filter-chip__count {
+    min-width: 1.4em;
+    padding: 0 0.35em;
+    border-radius: var(--radius-s);
+    background: var(--color-surface-strong);
+    color: var(--color-muted);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    text-align: center;
+  }
+
+  .filter-chip[aria-pressed='true'] .filter-chip__count {
+    background: rgb(255 255 255 / 0.18);
+    color: var(--color-on-dark);
+  }
+
+  .filter-bar__status {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--color-muted);
+  }
+
+  @media (min-width: 48em) {
+    .filter-group {
+      grid-template-columns: 8rem 1fr;
+      align-items: center;
+    }
+  }
+</style>
